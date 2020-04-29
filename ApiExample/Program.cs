@@ -273,9 +273,9 @@ namespace ApiExample
 
             if (Components.BOXComponent.DrawTheBox.Enabled)
             {
-                //var imaginaryHeadPos = new Vector2((Renderer.ScreenResolutionX / 2), (Renderer.ScreenResolutionY / 2 - 100));
-                //var imaginaryFeetPos = new Vector2((Renderer.ScreenResolutionX / 2), (Renderer.ScreenResolutionY / 2 + 100));
-                Renderer.DrawFPSBox((Renderer.ScreenResolutionX / 2), (Renderer.ScreenResolutionY / 2 - 100), (Renderer.ScreenResolutionX / 2), (Renderer.ScreenResolutionY / 2 + 100), Components.BOXComponent.DrawBoxColor.Color, (BoxStance)Components.BOXComponent.DrawStringOptions.Value,Components.BOXComponent.DrawBoxThickness.Value,Components.BOXComponent.DrawBoxBorder.Enabled,Components.BOXComponent.DrawSepBox.Enabled,Components.BOXComponent.DrawBoxHP.Value, Components.BOXComponent.DrawBoxHP.Enabled ? 100 : 0, Components.BOXComponent.DrawBoxMP.Value, Components.BOXComponent.DrawBoxMP.Enabled ? 100 : 0, Components.BOXComponent.DrawBoxFntSize.Value, Components.BOXComponent.DrawBoxDist.Enabled ? "Distance [47.2]" : "", Components.BOXComponent.DrawBoxWeap.Enabled ? "Weapon [AK-47]" : "", Components.BOXComponent.DrawBoxName.Enabled ? "Name [John Doe]" : "", Components.BOXComponent.DrawBoxClan.Enabled ? "Clan [Sniper Elite]" : "", Components.BOXComponent.DrawBoxPing.Enabled ? "Ping [80ms]" : "");
+                var imaginaryHeadPos = new Vector2((Renderer.ScreenResolutionX / 2), (Renderer.ScreenResolutionY / 2 - 100));
+                var imaginaryFeetPos = new Vector2((Renderer.ScreenResolutionX / 2), (Renderer.ScreenResolutionY / 2 + 100));
+                Renderer.DrawFPSBox(imaginaryHeadPos, imaginaryFeetPos, Components.BOXComponent.DrawBoxColor.Color, (BoxStance)Components.BOXComponent.DrawStringOptions.Value,Components.BOXComponent.DrawBoxThickness.Value,Components.BOXComponent.DrawBoxBorder.Enabled,Components.BOXComponent.DrawSepBox.Enabled,Components.BOXComponent.DrawBoxHP.Value, Components.BOXComponent.DrawBoxHP.Enabled ? 100 : 0, Components.BOXComponent.DrawBoxMP.Value, Components.BOXComponent.DrawBoxMP.Enabled ? 100 : 0, Components.BOXComponent.DrawBoxFntSize.Value, Components.BOXComponent.DrawBoxDist.Enabled ? "Distance [47.2]" : "", Components.BOXComponent.DrawBoxWeap.Enabled ? "Weapon [AK-47]" : "", Components.BOXComponent.DrawBoxName.Enabled ? "Name [John Doe]" : "", Components.BOXComponent.DrawBoxClan.Enabled ? "Clan [Sniper Elite]" : "", Components.BOXComponent.DrawBoxPing.Enabled ? "Ping [80ms]" : "");
             }
         }
     }
