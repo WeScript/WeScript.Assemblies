@@ -124,7 +124,6 @@ namespace AssaultCubeExample
                         {
                             //if we got access to the game, check if it's x64 bit, this is needed when reading pointers, since their size is 4 for x86 and 8 for x64
                             isWow64Process = Memory.IsProcess64Bit(processHandle);
-                            //here you can scan for signatures and stuff, it happens only once on "attach"
                         }
                     }
                 }
