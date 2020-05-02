@@ -201,9 +201,9 @@ namespace CSGOExample
                                         Vector2 vScreen_head = new Vector2(0, 0);
                                         Vector2 vScreen_foot = new Vector2(0, 0);
 
-                                        if (Renderer.WorldToScreen(headPos_fake, out vScreen_head, matrix, wndMargins, wndSize, W2SType.TypeD3D)) //only draw if the head position is visible on screen
+                                        if (Renderer.WorldToScreen(headPos_fake, out vScreen_head, matrix, wndMargins, wndSize, W2SType.TypeD3D9)) //only draw if the head position is visible on screen
                                         {
-                                            Renderer.WorldToScreen(m_vecOrigin, out vScreen_foot, matrix, wndMargins, wndSize, W2SType.TypeD3D); //feet position does not really matter if it's visible
+                                            Renderer.WorldToScreen(m_vecOrigin, out vScreen_foot, matrix, wndMargins, wndSize, W2SType.TypeD3D9); //feet position does not really matter if it's visible
                                             {
                                                 string dist_str = "";
                                                 if (Components.VisualsComponent.DrawTextDist.Enabled)
