@@ -52,7 +52,7 @@ namespace AssaultCubeExample
             {
                 public static readonly MenuBool DrawTheVisuals = new MenuBool("drawthevisuals", "Enable all of the Visuals", true);
                 public static readonly MenuColor AlliesColor = new MenuColor("alliescolor", "Allies ESP Color", new SharpDX.Color(0, 0, 255));
-                public static readonly MenuBool DrawAlliesEsp = new MenuBool("drawbox", "Draw Allies ESP", true);
+                public static readonly MenuBool DrawAlliesEsp = new MenuBool("drawalbox", "Draw Allies ESP", true);
                 public static readonly MenuColor EnemiesColor = new MenuColor("enemiescolor", "Enemies ESP Color", new SharpDX.Color(255, 0, 0));
                 public static readonly MenuBool DrawBox = new MenuBool("drawbox", "Draw Box ESP", true);
                 public static readonly MenuSlider DrawBoxThic = new MenuSlider("boxthickness", "Draw Box Thickness", 0, 0, 10);
