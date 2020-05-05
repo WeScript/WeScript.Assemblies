@@ -1,1 +1,3 @@
 # https://wescript.app/ Official Assemblies
+
+![Image of Yaktocat](https://octodex.github.com/images/yaktocat.png)
