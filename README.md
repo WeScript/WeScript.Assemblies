@@ -1,3 +1,3 @@
-# https://wescript.app/ Official Assemblies
+# https://wescript.app/ Official Assemblies Website
 
-![Image of Yaktocat](https://octodex.github.com/images/yaktocat.png)
+![CSGO](https://wescript.app/screenshots/assemblies/wescript_csgo_example.png)
