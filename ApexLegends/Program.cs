@@ -35,6 +35,11 @@ namespace ApexLegends
         public static IntPtr ViewRenderPtr = IntPtr.Zero;
         public static IntPtr ViewMatrixOffs = IntPtr.Zero;
 
+        public static int WM_KEYDOWN = 0x0100;
+        public static int WM_KEYUP = 0x0101;
+        public static int mySecondsBefore = 0;
+        public static bool shouldpostmsg = false;
+
         public static uint Velocity = 0x140; //vec3
         public static uint Origin = 0x14C; //vec3
         public static uint Shield = 0x170; //int
@@ -60,6 +65,7 @@ namespace ApexLegends
         public static Menu RootMenu { get; private set; }
         public static Menu VisualsMenu { get; private set; }
         public static Menu AimbotMenu { get; private set; }
+        public static Menu MiscMenu { get; private set; }
 
         class Components
         {
@@ -92,6 +98,10 @@ namespace ApexLegends
                 public static readonly MenuColor AimFovColor = new MenuColor("aimfovcolor", "FOV Color", new SharpDX.Color(255, 255, 255, 60));
                 public static readonly MenuSlider AimFov = new MenuSlider("aimfov", "Aimbot FOV", 100, 4, 1000);
             }
+            public static class MiscComponent
+            {
+                public static readonly MenuBool SupportInChat = new MenuBool("supportinchat", "Support WeScript.app by promoting it in chat to your teammates?", true);
+            }
         }
 
         public static void InitializeMenu()
@@ -123,11 +133,17 @@ namespace ApexLegends
                 Components.AimbotComponent.AimFov,
             };
 
+            MiscMenu = new Menu("miscmenu", "Misc Menu")
+            {
+                Components.MiscComponent.SupportInChat,
+            };
+
             RootMenu = new Menu("apexlegendsexample", "WeScript.app Apex Legends Example Assembly", true)
             {
                 Components.MainAssemblyToggle.SetToolTip("The magical boolean which completely disables/enables the assembly!"),
                 VisualsMenu,
                 AimbotMenu,
+                MiscMenu,
             };
             RootMenu.Attach();
         }
@@ -288,6 +304,40 @@ namespace ApexLegends
         }
 
 
+        public static void SendChatMessageToTeam(IntPtr gameWindow)
+        {
+            //ignore this ghetto implementation, it's TERRIBLE
+            Input.SendMessageWS(gameWindow, WM_KEYDOWN, (int)VirtualKeyCode.Enter, (IntPtr)(Input.MapVirtualKeyWS((uint)VirtualKeyCode.Enter, 0) << 16)); //keydown U
+            Input.SendMessageWS(gameWindow, WM_KEYUP, (int)VirtualKeyCode.Enter, (IntPtr)(Input.MapVirtualKeyWS((uint)VirtualKeyCode.Enter, 0) << 16)); //keyup U
+            Input.SleepWS(100);
+            Input.KeyPress(VirtualKeyCode.S);
+            Input.KeyPress(VirtualKeyCode.E);
+            Input.KeyPress(VirtualKeyCode.A);
+            Input.KeyPress(VirtualKeyCode.R);
+            Input.KeyPress(VirtualKeyCode.C);
+            Input.KeyPress(VirtualKeyCode.H);
+            Input.KeyPress(VirtualKeyCode.Space);
+            Input.KeyPress(VirtualKeyCode.F);
+            Input.KeyPress(VirtualKeyCode.O);
+            Input.KeyPress(VirtualKeyCode.R);
+            Input.KeyPress(VirtualKeyCode.Space);
+            Input.KeyPress(VirtualKeyCode.W);
+            Input.KeyPress(VirtualKeyCode.E);
+            Input.KeyPress(VirtualKeyCode.S);
+            Input.KeyPress(VirtualKeyCode.C);
+            Input.KeyPress(VirtualKeyCode.R);
+            Input.KeyPress(VirtualKeyCode.I);
+            Input.KeyPress(VirtualKeyCode.P);
+            Input.KeyPress(VirtualKeyCode.T);
+            Input.KeyPress(VirtualKeyCode.Space);
+            Input.KeyPress(VirtualKeyCode.A);
+            Input.KeyPress(VirtualKeyCode.P);
+            Input.KeyPress(VirtualKeyCode.P);
+            Input.SleepWS(33);
+            Input.KeyPress(VirtualKeyCode.Enter);
+        }
+
+
         private static void OnTick(int counter, EventArgs args)
         {
             if (processHandle == IntPtr.Zero) //if we still don't have a handle to the process
@@ -355,9 +405,21 @@ namespace ApexLegends
                             {
                                 ViewMatrixOffs = Memory.FindSignature(processHandle, GameBase, GameSize, "48 89 AB ? ? ? ? 4C 89 9B", 0x3, true);
                             }
+
+                            if (Components.MiscComponent.SupportInChat.Enabled)
+                            {
+                                if (isGameOnTop)
+                                {
+                                    if (shouldpostmsg)
+                                    {
+                                        shouldpostmsg = false;
+                                        SendChatMessageToTeam(wndHnd);
+                                    }
+                                }
+                            }
+
                         }
                     }
-
                 }
                 else //else most likely the process is dead, clean up
                 {
@@ -389,6 +451,24 @@ namespace ApexLegends
             if ((timeWithLP > 0) && (timeWithLP < timeToPlayWithoutDC))
             {
                 var secondsLeft = (timeToPlayWithoutDC - timeWithLP) / 1000;
+
+                if (Components.MiscComponent.SupportInChat.Enabled)
+                {
+                    if (secondsLeft == 3)
+                    {
+                        if (mySecondsBefore == 0)
+                        {
+                            mySecondsBefore = 3;
+                            shouldpostmsg = true;
+                        }
+                    }
+                    else
+                    {
+                        mySecondsBefore = 0;
+                    }
+                }
+                
+
                 if (Components.VisualsComponent.DrawTimeLeft.Enabled)
                 {
                     if (secondsLeft < 15)
