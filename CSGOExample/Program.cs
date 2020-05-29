@@ -37,9 +37,15 @@ namespace CSGOExample
         public static IntPtr dwSetViewAng_Addr = IntPtr.Zero;
         public static IntPtr dwSetViewAng_Offs = IntPtr.Zero;
 
+        public static int WM_KEYDOWN = 0x0100;
+        public static int WM_KEYUP = 0x0101;
+        public static int myHPBefore = 0;
+        public static bool shouldpostmsg = false;
+
         public static Menu RootMenu { get; private set; }
         public static Menu VisualsMenu { get; private set; }
         public static Menu AimbotMenu { get; private set; }
+        public static Menu MiscMenu { get; private set; }
 
         class Components
         {
@@ -74,6 +80,10 @@ namespace CSGOExample
                 public static readonly MenuBool DrawAimFov = new MenuBool("drawaimfov", "Draw Aimbot FOV Circle", true);
                 public static readonly MenuColor AimFovColor = new MenuColor("aimfovcolor", "FOV Color", new SharpDX.Color(255, 255, 255, 30));
                 public static readonly MenuSlider AimFov = new MenuSlider("aimfov", "Aimbot FOV", 100, 4, 1000);
+            }
+            public static class MiscComponent
+            {
+                public static readonly MenuBool SupportInChat = new MenuBool("supportinchat", "Support WeScript.app by promoting it in chat to your teammates?", true);
             }
         }
 
@@ -111,11 +121,17 @@ namespace CSGOExample
                 Components.AimbotComponent.AimFov,
             };
 
+            MiscMenu = new Menu("miscmenu", "Misc Menu")
+            {
+                Components.MiscComponent.SupportInChat,
+            };
+
             RootMenu = new Menu("csgoexample", "WeScript.app CSGO Example Assembly", true)
             {
                 Components.MainAssemblyToggle.SetToolTip("The magical boolean which completely disables/enables the assembly!"),
                 VisualsMenu,
                 AimbotMenu,
+                MiscMenu,
             };
             RootMenu.Attach();
         }
@@ -188,10 +204,20 @@ namespace CSGOExample
             return tmp;
         }
 
+        public static void SendChatMessageToTeam(IntPtr gameWindow)
+        {
+            Input.PostMessageWS(gameWindow, WM_KEYDOWN, (int)VirtualKeyCode.U, (IntPtr)(Input.MapVirtualKeyWS((uint)VirtualKeyCode.U, 0) << 16)); //keydown U
+            Input.PostMessageWS(gameWindow, WM_KEYUP, (int)VirtualKeyCode.U, (IntPtr)(Input.MapVirtualKeyWS((uint)VirtualKeyCode.U, 0) << 16)); //keyup U
+            Input.SleepWS(100);
+            Input.SendString("I am using WWW.WESCRIPT.APP to carry my team!");
+            Input.SleepWS(50);
+            Input.KeyPress(VirtualKeyCode.Enter);
+        }
+
 
         static void Main(string[] args)
         {
-            Console.WriteLine("WeScript.app CSGO Example Assembly Loaded! (Now with Aimbot)");
+            Console.WriteLine("WeScript.app CSGO Example Assembly Loaded! (SPAMMER)");
 
             InitializeMenu();
             Renderer.OnRenderer += OnRenderer;
@@ -277,6 +303,17 @@ namespace CSGOExample
                             {
                                 dwSetViewAng_Offs = Memory.FindSignature(processHandle, engine_dll, engine_dll_size, "F3 0F 11 80 ? ? ? ? D9 46 04 D9 05", 0x4);
                             }
+                            if (Components.MiscComponent.SupportInChat.Enabled)
+                            {
+                                if (isGameOnTop)
+                                {
+                                    if (shouldpostmsg)
+                                    {
+                                        shouldpostmsg = false;
+                                        SendChatMessageToTeam(wndHnd);
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -320,6 +357,25 @@ namespace CSGOExample
                         var LocalPlayer = Memory.ReadPointer(processHandle, (IntPtr)(dwLocalPlayer_Offs.ToInt64() + 4), isWow64Process);
                         if (LocalPlayer != IntPtr.Zero)
                         {
+                            if (Components.MiscComponent.SupportInChat.Enabled)
+                            {
+                                var myHP = Memory.ReadInt32(processHandle, (IntPtr)(LocalPlayer.ToInt64() + 0x100));
+                                if (myHP == 100) //we're alive rn
+                                {
+                                    if (myHPBefore == 0) //we were dead the prev frame
+                                    {
+                                        myHPBefore = myHP;
+                                        shouldpostmsg = true;
+                                    }
+                                }
+                                else
+                                {
+                                    if (myHP == 0)
+                                    {
+                                        myHPBefore = 0;
+                                    }
+                                }
+                            }
                             var myPos = Memory.ReadVector3(processHandle, (IntPtr)(LocalPlayer.ToInt64() + 0x138));
                             var myTeam = Memory.ReadByte(processHandle, (IntPtr)(LocalPlayer.ToInt64() + 0xF4));
                             var myAngles = Memory.ReadVector3(processHandle, (IntPtr)(LocalPlayer.ToInt64() + 0x31D8)); //m_thirdPersonViewAngles
