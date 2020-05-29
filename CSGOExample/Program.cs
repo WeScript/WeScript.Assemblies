@@ -217,7 +217,7 @@ namespace CSGOExample
 
         static void Main(string[] args)
         {
-            Console.WriteLine("WeScript.app CSGO Example Assembly Loaded! (SPAMMER)");
+            Console.WriteLine("WeScript.app CSGO Example Assembly Loaded! (Now with AIMBOT)");
 
             InitializeMenu();
             Renderer.OnRenderer += OnRenderer;
