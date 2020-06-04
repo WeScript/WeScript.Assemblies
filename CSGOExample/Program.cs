@@ -217,7 +217,7 @@ namespace CSGOExample
 
         static void Main(string[] args)
         {
-            Console.WriteLine("WeScript.app CSGO Example Assembly Loaded! (Now with AIMBOT)");
+            Console.WriteLine("WeScript.app CSGO Example Assembly Loaded! (last update [04.06.2020])");
 
             InitializeMenu();
             Renderer.OnRenderer += OnRenderer;
@@ -259,13 +259,13 @@ namespace CSGOExample
 
                     if (client_panorama == IntPtr.Zero) //if the dll is still null
                     {
-                        client_panorama = Memory.GetModule(processHandle, "client_panorama.dll", isWow64Process); //attempt to find the module (if it's loaded)
+                        client_panorama = Memory.GetModule(processHandle, "client.dll", isWow64Process); //attempt to find the module (if it's loaded)
                     }
                     else
                     {
                         if (client_panorama_size == IntPtr.Zero) //dll got loaded, check if size is zero
                         {
-                            client_panorama_size = Memory.GetModuleSize(processHandle, "client_panorama.dll", isWow64Process); //get module size
+                            client_panorama_size = Memory.GetModuleSize(processHandle, "client.dll", isWow64Process); //get module size
                         }
                         else
                         {
@@ -291,7 +291,7 @@ namespace CSGOExample
                     {
                         if (engine_dll_size == IntPtr.Zero)
                         {
-                            engine_dll_size = Memory.GetModuleSize(processHandle, "engine.dll", isWow64Process); 
+                            engine_dll_size = Memory.GetModuleSize(processHandle, "engine.dll", isWow64Process);
                         }
                         else
                         {
@@ -471,7 +471,7 @@ namespace CSGOExample
 
                                 var rx = GameCenterPos.X - (dx * ((myPunchAngles.Y)));
                                 var ry = GameCenterPos.Y + (dy * ((myPunchAngles.X)));
-                                if (Components.AimbotComponent.DrawRecoil.Enabled) 
+                                if (Components.AimbotComponent.DrawRecoil.Enabled)
                                 {
                                     Renderer.DrawFilledRect(rx - 1, ry - 1, 2, 2, Components.AimbotComponent.RecoilColor.Color);
                                 }
