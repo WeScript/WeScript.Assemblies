@@ -104,8 +104,12 @@ namespace DeadByDaylight
 
         static void Main(string[] args)
         {
-            Console.WriteLine("WeScript.app DBD Example Assembly Loaded! (Don't forget EAC Bypass!)");
+            Console.WriteLine("WeScript.app experimental DBD assembly for patch 4.0.2...");
             InitializeMenu();
+            if (!Memory.InitDriver(DriverName.Fairplay))
+            {
+                Console.WriteLine("[ERROR] Failed to initialize driver for some reason...");
+            }
             Renderer.OnRenderer += OnRenderer;
             Memory.OnTick += OnTick;
         }
@@ -122,7 +126,7 @@ namespace DeadByDaylight
                     var calcPid = Memory.GetPIDFromHWND(wndHnd); //get the PID of that same process
                     if (calcPid > 0) //if we got the PID
                     {
-                        processHandle = Memory.OpenProcess(PROCESS_ALL_ACCESS, calcPid); //the driver will get a stripped handle, but doesn't matter, it's still OK
+                        processHandle = Memory.ZwOpenProcess(PROCESS_ALL_ACCESS, calcPid); //the driver will get a stripped handle, but doesn't matter, it's still OK
                         if (processHandle != IntPtr.Zero)
                         {
                             //if we got access to the game, check if it's x64 bit, this is needed when reading pointers, since their size is 4 for x86 and 8 for x64
@@ -149,13 +153,13 @@ namespace DeadByDaylight
 
                     if (GameBase == IntPtr.Zero) //do we have access to Gamebase address?
                     {
-                        GameBase = Memory.GetModule(processHandle, null, isWow64Process); //if not, find it
+                        GameBase = Memory.ZwGetModule(processHandle, null, isWow64Process); //if not, find it
                     }
                     else
                     {
                         if (GameSize == IntPtr.Zero)
                         {
-                            GameSize = Memory.GetModuleSize(processHandle, null, isWow64Process);
+                            GameSize = Memory.ZwGetModuleSize(processHandle, null, isWow64Process);
                         }
                         else
                         {
@@ -185,59 +189,59 @@ namespace DeadByDaylight
 
             //Renderer.DrawText($"min: {(151000 + (Components.VisualsComponent.OffsetGuesser.Value * 10)).ToString()} max: {(151100 + (Components.VisualsComponent.OffsetGuesser.Value * 10)).ToString()}", new Vector2(300, 300));
             Matrix viewProj = new Matrix();
-            var UWorld = Memory.ReadPointer(processHandle, (IntPtr)GameBase.ToInt64() + 0x5A29158, isWow64Process); //48 8B 1D ?? ?? ?? ?? 48 85 DB 74 3B 41 || mov rbx,[DeadByDaylight-Win64-Shipping.exe+5A29158]
+            var UWorld = Memory.ZwReadPointer(processHandle, (IntPtr)GameBase.ToInt64() + 0x5D72BB8, isWow64Process); //48 8B 1D ?? ?? ?? ?? 48 85 DB 74 3B 41 || mov rbx,[DeadByDaylight-Win64-Shipping.exe+5A29158]
             if (UWorld != IntPtr.Zero)
             {
-                var UGameInstance = Memory.ReadPointer(processHandle, (IntPtr)UWorld.ToInt64() + 0x170, isWow64Process);
+                var UGameInstance = Memory.ZwReadPointer(processHandle, (IntPtr)UWorld.ToInt64() + 0x170, isWow64Process);
                 if (UGameInstance != IntPtr.Zero)
                 {
-                    var localPlayerArray = Memory.ReadPointer(processHandle, (IntPtr)UGameInstance.ToInt64() + 0x40, isWow64Process);
+                    var localPlayerArray = Memory.ZwReadPointer(processHandle, (IntPtr)UGameInstance.ToInt64() + 0x40, isWow64Process);
                     if (localPlayerArray != IntPtr.Zero)
                     {
-                        var ULocalPlayer = Memory.ReadPointer(processHandle, localPlayerArray, isWow64Process);
+                        var ULocalPlayer = Memory.ZwReadPointer(processHandle, localPlayerArray, isWow64Process);
                         if (ULocalPlayer != IntPtr.Zero)
                         {
-                            var CameraPtr = Memory.ReadPointer(processHandle, (IntPtr)ULocalPlayer.ToInt64() + 0xB8, isWow64Process);
+                            var CameraPtr = Memory.ZwReadPointer(processHandle, (IntPtr)ULocalPlayer.ToInt64() + 0xB8, isWow64Process);
                             if (CameraPtr != IntPtr.Zero)
                             {
-                                viewProj = Memory.ReadMatrix(processHandle, (IntPtr)(CameraPtr.ToInt64() + 0x1FC));
+                                viewProj = Memory.ZwReadMatrix(processHandle, (IntPtr)(CameraPtr.ToInt64() + 0x1FC));
                             }
                         }
                     }
                 }
-                var ULevel = Memory.ReadPointer(processHandle, (IntPtr)UWorld.ToInt64() + 0x38, isWow64Process);
+                var ULevel = Memory.ZwReadPointer(processHandle, (IntPtr)UWorld.ToInt64() + 0x38, isWow64Process);
                 if (ULevel != IntPtr.Zero)
                 {
-                    var AActors = Memory.ReadPointer(processHandle, (IntPtr)ULevel.ToInt64() + 0xA0, isWow64Process);
-                    var ActorCnt = Memory.ReadUInt32(processHandle, (IntPtr)ULevel.ToInt64() + 0xA8);
+                    var AActors = Memory.ZwReadPointer(processHandle, (IntPtr)ULevel.ToInt64() + 0xA0, isWow64Process);
+                    var ActorCnt = Memory.ZwReadUInt32(processHandle, (IntPtr)ULevel.ToInt64() + 0xA8);
                     if ((AActors != IntPtr.Zero) && (ActorCnt > 0))
                     {
                         for (uint i = 0; i <= ActorCnt; i++)
                         {
-                            var AActor = Memory.ReadPointer(processHandle, (IntPtr)(AActors.ToInt64() + i * 8), isWow64Process);
+                            var AActor = Memory.ZwReadPointer(processHandle, (IntPtr)(AActors.ToInt64() + i * 8), isWow64Process);
                             if (AActor != IntPtr.Zero)
                             {
-                                var USceneComponent = Memory.ReadPointer(processHandle, (IntPtr)AActor.ToInt64() + 0x168, isWow64Process);
+                                var USceneComponent = Memory.ZwReadPointer(processHandle, (IntPtr)AActor.ToInt64() + 0x168, isWow64Process);
                                 if (USceneComponent != IntPtr.Zero)
                                 {
-                                    var tempVec = Memory.ReadVector3(processHandle, (IntPtr)USceneComponent.ToInt64() + 0x160);
-                                    var AActorID = Memory.ReadUInt32(processHandle, (IntPtr)AActor.ToInt64() + 0x18);
+                                    var tempVec = Memory.ZwReadVector3(processHandle, (IntPtr)USceneComponent.ToInt64() + 0x160);
+                                    var AActorID = Memory.ZwReadUInt32(processHandle, (IntPtr)AActor.ToInt64() + 0x18);
                                     //if ((AActorID > 0) && (AActorID < 200000))
                                     //{
-                                    //    the check below is a ghetto way to "guess" the ID of players and killers using a slider in the menu
+                                    //    //the check below is a ghetto way to "guess" the ID of players and killers using a slider in the menu
                                     //    Vector2 vScreen_d3d11 = new Vector2(0, 0);
-                                    //    if ((AActorID >= 151000 + (Components.VisualsComponent.OffsetGuesser.Value * 10)) && (AActorID <= 151100 + (Components.VisualsComponent.OffsetGuesser.Value * 10)))
+                                    //    if ((AActorID >= 160000 + (Components.VisualsComponent.OffsetGuesser.Value * 10)) && (AActorID <= 160100 + (Components.VisualsComponent.OffsetGuesser.Value * 10)))
                                     //    {
                                     //        if (Renderer.WorldToScreen(tempVec, out vScreen_d3d11, viewProj, wndMargins, wndSize, W2SType.TypeD3D11))
                                     //        {
-                                    //            Renderer.DrawText($"ID: {AActorID.ToString()} Name: {GetNameFromID(AActorID)}", vScreen_d3d11, new Color(255, 255, 255), 12, TextAlignment.centered, false);
+                                    //            Renderer.DrawText($"ID: {AActorID.ToString()}", vScreen_d3d11, new Color(255, 255, 255), 12, TextAlignment.centered, false);
                                     //        }
                                     //    }
                                     //}
 
                                     if (Components.VisualsComponent.DrawTheVisuals.Enabled) //this should have been placed earlier?
                                     {
-                                        if (AActorID == 152012) //survivors on 3.7.2
+                                        if (AActorID == 161137) //survivors on 4.0.2
                                         {
                                             Vector2 vScreen_h3ad = new Vector2(0, 0);
                                             Vector2 vScreen_f33t = new Vector2(0, 0);
@@ -250,7 +254,7 @@ namespace DeadByDaylight
                                                 }
                                             }
                                         }
-                                        if (AActorID == 152720) //killers on 3.7.2
+                                        if (AActorID == 161920) //killers on 4.0.2 
                                         {
                                             Vector2 vScreen_h3ad = new Vector2(0, 0);
                                             Vector2 vScreen_f33t = new Vector2(0, 0);
@@ -268,7 +272,6 @@ namespace DeadByDaylight
                             }
                         }
                     }
-
                 }
             }
         }
