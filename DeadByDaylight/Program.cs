@@ -76,7 +76,7 @@ namespace DeadByDaylight
         //    {
         //        if (GameBase != IntPtr.Zero)
         //        {
-        //            var GNames = Memory.ReadPointer(processHandle, (IntPtr)GameBase.ToInt64() + 0x58EEED8, isWow64Process);
+        //            var GNames = Memory.ReadPointer(processHandle, (IntPtr)GameBase.ToInt64() + 0x58EEED8, isWow64Process); //48 8B 05 ? ? ? ? 48 85 C0 75 5F
         //            if (GNames != IntPtr.Zero)
         //            {
         //                for (uint i = 0; i <= 12; i++)
