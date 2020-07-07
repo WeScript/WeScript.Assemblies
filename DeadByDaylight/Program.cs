@@ -26,6 +26,11 @@ namespace DeadByDaylight
         public static IntPtr GameBase = IntPtr.Zero;
         public static IntPtr GameSize = IntPtr.Zero;
 
+        public static uint survivorID = 0;
+        public static uint killerID = 0;
+        public static uint escapeID = 0;
+        public static uint hatchID = 0;
+
 
         public static Menu RootMenu { get; private set; }
         public static Menu VisualsMenu { get; private set; }
@@ -42,6 +47,8 @@ namespace DeadByDaylight
                 public static readonly MenuBool DrawKillerBox = new MenuBool("drawbox", "Draw Box ESP", true);
                 public static readonly MenuSlider DrawBoxThic = new MenuSlider("boxthickness", "Draw Box Thickness", 0, 0, 10);
                 public static readonly MenuBool DrawBoxBorder = new MenuBool("drawboxborder", "Draw Border around Box and Text?", true);
+                public static readonly MenuBool DrawMiscInfo = new MenuBool("drawmiscinfos", "Draw hatch and escape positions", true);
+                public static readonly MenuColor MiscColor = new MenuColor("misccolor", "Draw Text Color", new SharpDX.Color(255, 255, 255, 100));
                 //public static readonly MenuSlider OffsetGuesser = new MenuSlider("ofsgues", "Guess the offset", 10, 1, 250);
             }
         }
@@ -57,6 +64,8 @@ namespace DeadByDaylight
                 Components.VisualsComponent.DrawKillerBox,
                 Components.VisualsComponent.DrawBoxThic.SetToolTip("Setting thickness to 0 will let the assembly auto-adjust itself depending on model distance"),
                 Components.VisualsComponent.DrawBoxBorder.SetToolTip("Drawing borders may take extra performance (FPS) on low-end computers"),
+                Components.VisualsComponent.DrawMiscInfo,
+                Components.VisualsComponent.MiscColor,
                 //Components.VisualsComponent.OffsetGuesser,
             };
 
@@ -70,43 +79,55 @@ namespace DeadByDaylight
         }
 
 
-        //public static string GetNameFromID(uint ID) //really bad implementation - probably needs fixing, plus it's better to use it as a dumper once at startup and cache ids
-        //{
-        //    if (processHandle != IntPtr.Zero)
-        //    {
-        //        if (GameBase != IntPtr.Zero)
-        //        {
-        //            var GNames = Memory.ReadPointer(processHandle, (IntPtr)GameBase.ToInt64() + 0x58EEED8, isWow64Process); //48 8B 05 ? ? ? ? 48 85 C0 75 5F
-        //            if (GNames != IntPtr.Zero)
-        //            {
-        //                for (uint i = 0; i <= 12; i++)
-        //                {
-        //                    var firstChunk = Memory.ReadPointer(processHandle, (IntPtr)(GNames.ToInt64() + i * 8), isWow64Process);
-        //                    if (firstChunk != IntPtr.Zero)
-        //                    {
-        //                        var fNamePtr = Memory.ReadPointer(processHandle, (IntPtr)(firstChunk.ToInt64() + (ID / 0x4000) * 8), isWow64Process);
-        //                        if (fNamePtr != IntPtr.Zero)
-        //                        {
-        //                            var fName = Memory.ReadPointer(processHandle, (IntPtr)(fNamePtr.ToInt64() + 8 * (ID % 0x4000)), isWow64Process);
-        //                            if (fName != IntPtr.Zero)
-        //                            {
-        //                                var name = Memory.ReadString(processHandle, (IntPtr)fName.ToInt64() + 0xC, false, 64);
-        //                                if (name.Length > 0) return name;
-        //                            }
-        //                        }
-        //                    }
-        //                }
-        //            }
-        //        }
-        //    }
-        //    return "NULL";
-        //}
+        public static string GetNameFromID(uint ID) //really bad implementation - probably needs fixing, plus it's better to use it as a dumper once at startup and cache ids
+        {
+            if (processHandle != IntPtr.Zero)
+            {
+                if (GameBase != IntPtr.Zero)
+                {
+                    var GNamesAddress = Memory.ZwReadPointer(processHandle, (IntPtr)(GameBase.ToInt64() + 0x05C38918), isWow64Process); //48 8B 05 ? ? ? ? 48 85 C0 75 5F
+                    if (GNamesAddress != IntPtr.Zero)
+                    {
+                        //for (uint i = 0; i <= 12; i++)
+                        //{
+                        //    var firstChunk = Memory.ReadPointer(processHandle, (IntPtr)(GNamesAddress.ToInt64() + i * 8), isWow64Process);
+                        //    if (firstChunk != IntPtr.Zero)
+                        //    {
+                        //        var fNamePtr = Memory.ReadPointer(processHandle, (IntPtr)(firstChunk.ToInt64() + (ID / 0x4000) * 8), isWow64Process);
+                        //        if (fNamePtr != IntPtr.Zero)
+                        //        {
+                        //            var fName = Memory.ReadPointer(processHandle, (IntPtr)(fNamePtr.ToInt64() + 8 * (ID % 0x4000)), isWow64Process);
+                        //            if (fName != IntPtr.Zero)
+                        //            {
+                        //                var name = Memory.ReadString(processHandle, (IntPtr)fName.ToInt64() + 0xC, true, 64);
+                        //                if (name.Length > 0) return name;
+                        //            }
+                        //        }
+                        //    }
+                        //}
+                        UInt64 ChunkIndex = ID / 0x4000;
+                        UInt64 WithinChunkIndex = ID % 0x4000;
+                        var fNamePtr = Memory.ZwReadPointer(processHandle, (IntPtr)(GNamesAddress.ToInt64() + (long)ChunkIndex * 0x8), isWow64Process);
+                        if (fNamePtr != IntPtr.Zero)
+                        {
+                            var fName = Memory.ZwReadPointer(processHandle, (IntPtr)(fNamePtr.ToInt64() + 0x8 * (long)WithinChunkIndex), isWow64Process);
+                            if (fName != IntPtr.Zero)
+                            {
+                                var name = Memory.ZwReadString(processHandle, (IntPtr)fName.ToInt64() + 0xC, false, 64);
+                                if (name.Length > 0) return name;
+                            }
+                        }
+                    }
+                }
+            }
+            return "NULL";
+        }
 
         static void Main(string[] args)
         {
             Console.WriteLine("WeScript.app experimental DBD assembly for patch 4.0.2...");
             InitializeMenu();
-            if (!Memory.InitDriver(DriverName.Fairplay))
+            if (!Memory.InitDriver(DriverName.frost_64))
             {
                 Console.WriteLine("[ERROR] Failed to initialize driver for some reason...");
             }
@@ -151,18 +172,24 @@ namespace DeadByDaylight
                     isGameOnTop = Renderer.IsGameOnTop(wndHnd);
                     isOverlayOnTop = Overlay.IsOnTop();
 
+                    //var kernelbase = Memory.ZwReadPointer(processHandle, (IntPtr)0x77500000, isWow64Process);
+                    //Console.WriteLine($"77500000: {kernelbase.ToString("X")}");
+
                     if (GameBase == IntPtr.Zero) //do we have access to Gamebase address?
                     {
                         GameBase = Memory.ZwGetModule(processHandle, null, isWow64Process); //if not, find it
+                        Console.WriteLine($"GameBase: {GameBase.ToString("X")}");
                     }
                     else
                     {
                         if (GameSize == IntPtr.Zero)
                         {
                             GameSize = Memory.ZwGetModuleSize(processHandle, null, isWow64Process);
+                            Console.WriteLine($"GameSize: {GameSize.ToString("X")}");
                         }
                         else
                         {
+                            //uncomment to spam it every frame
                             //Console.WriteLine($"GameBase: {GameBase.ToString("X")}"); //easy way to check if we got reading rights
                             //Console.WriteLine($"GameSize: {GameSize.ToString("X")}"); //easy way to check if we got reading rights
                         }
@@ -226,22 +253,58 @@ namespace DeadByDaylight
                                 {
                                     var tempVec = Memory.ZwReadVector3(processHandle, (IntPtr)USceneComponent.ToInt64() + 0x160);
                                     var AActorID = Memory.ZwReadUInt32(processHandle, (IntPtr)AActor.ToInt64() + 0x18);
-                                    //if ((AActorID > 0) && (AActorID < 200000))
-                                    //{
-                                    //    //the check below is a ghetto way to "guess" the ID of players and killers using a slider in the menu
-                                    //    Vector2 vScreen_d3d11 = new Vector2(0, 0);
-                                    //    if ((AActorID >= 160000 + (Components.VisualsComponent.OffsetGuesser.Value * 10)) && (AActorID <= 160100 + (Components.VisualsComponent.OffsetGuesser.Value * 10)))
-                                    //    {
-                                    //        if (Renderer.WorldToScreen(tempVec, out vScreen_d3d11, viewProj, wndMargins, wndSize, W2SType.TypeD3D11))
-                                    //        {
-                                    //            Renderer.DrawText($"ID: {AActorID.ToString()}", vScreen_d3d11, new Color(255, 255, 255), 12, TextAlignment.centered, false);
-                                    //        }
-                                    //    }
-                                    //}
+                                    if ((AActorID > 0) && (AActorID < 200000))
+                                    {
+                                        if ((survivorID == 0) || (killerID == 0) || (escapeID == 0) || (hatchID == 0))
+                                        {
+                                            var retname = GetNameFromID(AActorID);
+                                            if (retname.Contains("BP_CamperInteractable_"))
+                                            {
+                                                survivorID = AActorID;
+                                            }
+                                            if (retname.Contains("SlasherInteractable_"))
+                                            {
+                                                killerID = AActorID;
+                                            }
+                                            if (retname.Contains("BP_Escape01"))
+                                            {
+                                                escapeID = AActorID;
+                                            }
+                                            if (retname.Contains("BP_Hatch"))
+                                            {
+                                                hatchID = AActorID;
+                                            }
+                                        }
+                                        //the check below is a ghetto way to "guess" the ID of players and killers using a slider in the menu
+                                        //Vector2 vScreen_d3d11 = new Vector2(0, 0);
+                                        //if ((AActorID >= 160000 + (Components.VisualsComponent.OffsetGuesser.Value * 10)) && (AActorID <= 160100 + (Components.VisualsComponent.OffsetGuesser.Value * 10)))
+                                        //{
+                                        //    if (Renderer.WorldToScreen(tempVec, out vScreen_d3d11, viewProj, wndMargins, wndSize, W2SType.TypeD3D11))
+                                        //    {
+                                        //        //Renderer.DrawText($"ID: {AActorID.ToString()}", vScreen_d3d11, new Color(255, 255, 255), 12, TextAlignment.centered, false);
+                                        //        var gnm = GetNameFromID(AActorID);
+                                        //        if (gnm != "NULL")
+                                        //        {
+                                        //            Renderer.DrawText($"ID: {AActorID.ToString()} {gnm}" , vScreen_d3d11, Color.White, 12, TextAlignment.centered, false);
+                                        //        }
+                                        //    }
+                                        //}
+                                        //var gnm = GetNameFromID(AActorID);
+                                        //{
+                                        //    if ((gnm.Contains("BP_Hatch")) || (gnm.Contains("Generator")) || (gnm.Contains("BP_Escape01")))
+                                        //    {
+                                        //        Vector2 vScreen_d3d11 = new Vector2(0, 0);
+                                        //        if (Renderer.WorldToScreen(tempVec, out vScreen_d3d11, viewProj, wndMargins, wndSize, W2SType.TypeD3D11))
+                                        //        {
+                                        //            Renderer.DrawText(gnm, vScreen_d3d11, Color.White, 12, TextAlignment.centered, false);
+                                        //        }
+                                        //    }
+                                        //}
+                                    }
 
                                     if (Components.VisualsComponent.DrawTheVisuals.Enabled) //this should have been placed earlier?
                                     {
-                                        if (AActorID == 161137) //survivors on 4.0.2
+                                        if (AActorID == survivorID)
                                         {
                                             Vector2 vScreen_h3ad = new Vector2(0, 0);
                                             Vector2 vScreen_f33t = new Vector2(0, 0);
@@ -254,7 +317,7 @@ namespace DeadByDaylight
                                                 }
                                             }
                                         }
-                                        if (AActorID == 161920) //killers on 4.0.2 
+                                        if (AActorID == killerID)
                                         {
                                             Vector2 vScreen_h3ad = new Vector2(0, 0);
                                             Vector2 vScreen_f33t = new Vector2(0, 0);
@@ -264,6 +327,25 @@ namespace DeadByDaylight
                                                 if (Components.VisualsComponent.DrawKillerBox.Enabled)
                                                 {
                                                     Renderer.DrawFPSBox(vScreen_h3ad, vScreen_f33t, Components.VisualsComponent.KillerColor.Color, BoxStance.standing, Components.VisualsComponent.DrawBoxThic.Value, Components.VisualsComponent.DrawBoxBorder.Enabled);
+                                                }
+                                            }
+                                        }
+                                        if (Components.VisualsComponent.DrawMiscInfo.Enabled)
+                                        {
+                                            if (AActorID == escapeID)
+                                            {
+                                                Vector2 vScreen_d3d11 = new Vector2(0, 0);
+                                                if (Renderer.WorldToScreen(tempVec, out vScreen_d3d11, viewProj, wndMargins, wndSize, W2SType.TypeD3D11))
+                                                {
+                                                    Renderer.DrawText("ESCAPE", vScreen_d3d11, Components.VisualsComponent.MiscColor.Color, 12, TextAlignment.centered, false);
+                                                }
+                                            }
+                                            if (AActorID == hatchID)
+                                            {
+                                                Vector2 vScreen_d3d11 = new Vector2(0, 0);
+                                                if (Renderer.WorldToScreen(tempVec, out vScreen_d3d11, viewProj, wndMargins, wndSize, W2SType.TypeD3D11))
+                                                {
+                                                    Renderer.DrawText("HATCH", vScreen_d3d11, Components.VisualsComponent.MiscColor.Color, 12, TextAlignment.centered, false);
                                                 }
                                             }
                                         }
