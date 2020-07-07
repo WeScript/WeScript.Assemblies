@@ -20,7 +20,7 @@ namespace DeadByDaylight
         public static bool isWow64Process = false; //we all know the game is 32bit, but anyway...
         public static bool isGameOnTop = false; //we should avoid drawing while the game is not set on top
         public static bool isOverlayOnTop = false; //we might allow drawing visuals, while the user is working with the "menu"
-        public static uint PROCESS_ALL_ACCESS = 0x1FFFFF; //hardcoded access right to OpenProcess
+        public static uint PROCESS_ALL_ACCESS = 0x1FFFFF; //hardcoded access right to OpenProcess (even EAC strips some of the access flags)
         public static Vector2 wndMargins = new Vector2(0, 0); //if the game window is smaller than your desktop resolution, you should avoid drawing outside of it
         public static Vector2 wndSize = new Vector2(0, 0); //get the size of the game window ... to know where to draw
         public static IntPtr GameBase = IntPtr.Zero;
@@ -125,7 +125,7 @@ namespace DeadByDaylight
 
         static void Main(string[] args)
         {
-            Console.WriteLine("WeScript.app experimental DBD assembly for patch 4.0.2...");
+            Console.WriteLine("WeScript.app experimental DBD assembly for patch 4.0.2 with Driver bypass");
             InitializeMenu();
             if (!Memory.InitDriver(DriverName.frost_64))
             {
@@ -178,14 +178,15 @@ namespace DeadByDaylight
                     if (GameBase == IntPtr.Zero) //do we have access to Gamebase address?
                     {
                         GameBase = Memory.ZwGetModule(processHandle, null, isWow64Process); //if not, find it
-                        Console.WriteLine($"GameBase: {GameBase.ToString("X")}");
+                        //Console.WriteLine($"GameBase: {GameBase.ToString("X")}");
+                        Console.WriteLine("Got GAMEBASE of DBD!");
                     }
                     else
                     {
                         if (GameSize == IntPtr.Zero)
                         {
                             GameSize = Memory.ZwGetModuleSize(processHandle, null, isWow64Process);
-                            Console.WriteLine($"GameSize: {GameSize.ToString("X")}");
+                            //Console.WriteLine($"GameSize: {GameSize.ToString("X")}");
                         }
                         else
                         {
@@ -314,6 +315,7 @@ namespace DeadByDaylight
                                                 if (Components.VisualsComponent.DrawSurvivorBox.Enabled)
                                                 {
                                                     Renderer.DrawFPSBox(vScreen_h3ad, vScreen_f33t, Components.VisualsComponent.SurvColor.Color, BoxStance.standing, Components.VisualsComponent.DrawBoxThic.Value, Components.VisualsComponent.DrawBoxBorder.Enabled);
+                                                    Renderer.DrawText("SURVIVOR", vScreen_f33t.X, vScreen_f33t.Y+5, Components.VisualsComponent.SurvColor.Color, 12, TextAlignment.centered, false);
                                                 }
                                             }
                                         }
@@ -327,6 +329,7 @@ namespace DeadByDaylight
                                                 if (Components.VisualsComponent.DrawKillerBox.Enabled)
                                                 {
                                                     Renderer.DrawFPSBox(vScreen_h3ad, vScreen_f33t, Components.VisualsComponent.KillerColor.Color, BoxStance.standing, Components.VisualsComponent.DrawBoxThic.Value, Components.VisualsComponent.DrawBoxBorder.Enabled);
+                                                    Renderer.DrawText("KILLER", vScreen_f33t.X, vScreen_f33t.Y + 5, Components.VisualsComponent.KillerColor.Color, 12, TextAlignment.centered, false);
                                                 }
                                             }
                                         }
