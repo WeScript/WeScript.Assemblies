@@ -26,6 +26,10 @@ namespace DeadByDaylight
         public static IntPtr GameBase = IntPtr.Zero;
         public static IntPtr GameSize = IntPtr.Zero;
 
+        public static Vector3 FMinimalViewInfo_Location = new Vector3(0, 0, 0);
+        public static Vector3 FMinimalViewInfo_Rotation = new Vector3(0, 0, 0);
+        public static float FMinimalViewInfo_FOV = 0;
+
         public static uint survivorID = 0;
         public static uint killerID = 0;
         public static uint escapeID = 0;
@@ -125,7 +129,7 @@ namespace DeadByDaylight
 
         static void Main(string[] args)
         {
-            Console.WriteLine("WeScript.app experimental DBD assembly for patch 4.0.2 with Driver bypass");
+            Console.WriteLine("WeScript.app experimental DBD assembly for patch 4.0.2 with Driver bypass - Fixed W2S");
             InitializeMenu();
             if (!Memory.InitDriver(DriverName.frost_64))
             {
@@ -215,8 +219,9 @@ namespace DeadByDaylight
             if ((!isGameOnTop) && (!isOverlayOnTop)) return; //if game and overlay are not on top, don't draw
             if (!Components.MainAssemblyToggle.Enabled) return; //main menu boolean to toggle the cheat on or off
 
+
             //Renderer.DrawText($"min: {(151000 + (Components.VisualsComponent.OffsetGuesser.Value * 10)).ToString()} max: {(151100 + (Components.VisualsComponent.OffsetGuesser.Value * 10)).ToString()}", new Vector2(300, 300));
-            Matrix viewProj = new Matrix();
+            //Matrix viewProj = new Matrix();
             var UWorld = Memory.ZwReadPointer(processHandle, (IntPtr)GameBase.ToInt64() + 0x5D72BB8, isWow64Process); //48 8B 1D ?? ?? ?? ?? 48 85 DB 74 3B 41 || mov rbx,[DeadByDaylight-Win64-Shipping.exe+5A29158]
             if (UWorld != IntPtr.Zero)
             {
@@ -229,10 +234,24 @@ namespace DeadByDaylight
                         var ULocalPlayer = Memory.ZwReadPointer(processHandle, localPlayerArray, isWow64Process);
                         if (ULocalPlayer != IntPtr.Zero)
                         {
-                            var CameraPtr = Memory.ZwReadPointer(processHandle, (IntPtr)ULocalPlayer.ToInt64() + 0xB8, isWow64Process);
-                            if (CameraPtr != IntPtr.Zero)
+                            //var CameraPtr = Memory.ZwReadPointer(processHandle, (IntPtr)ULocalPlayer.ToInt64() + 0xB8, isWow64Process);
+                            //if (CameraPtr != IntPtr.Zero)
+                            //{
+                            //    viewProj = Memory.ZwReadMatrix(processHandle, (IntPtr)(CameraPtr.ToInt64() + 0x1FC));
+                            //}
+                            var APlayerController = Memory.ZwReadPointer(processHandle, (IntPtr)ULocalPlayer.ToInt64() + 0x38, isWow64Process);
+                            if (APlayerController != IntPtr.Zero)
                             {
-                                viewProj = Memory.ZwReadMatrix(processHandle, (IntPtr)(CameraPtr.ToInt64() + 0x1FC));
+                                var APlayerCameraManager = Memory.ZwReadPointer(processHandle, (IntPtr)APlayerController.ToInt64() + 0x3E0, isWow64Process);
+                                if (APlayerCameraManager != IntPtr.Zero)
+                                {
+                                    //Console.WriteLine($"APlayerCameraManager: {APlayerCameraManager.ToString("X")}");
+                                    FMinimalViewInfo_Location = Memory.ZwReadVector3(processHandle, (IntPtr)APlayerCameraManager.ToInt64() + 0x1A30 + 0x0010);
+                                    FMinimalViewInfo_Rotation = Memory.ZwReadVector3(processHandle, (IntPtr)APlayerCameraManager.ToInt64() + 0x1A30 + 0x001C);
+                                    FMinimalViewInfo_FOV = Memory.ZwReadFloat(processHandle, (IntPtr)APlayerCameraManager.ToInt64() + 0x1A30 + 0x0028);
+                                    //Console.WriteLine($"Loc: {FMinimalViewInfo_Location.ToString()} Rot: {FMinimalViewInfo_Rotation.ToString()} FOV: {FMinimalViewInfo_FOV.ToString()}");
+                                    //Console.WriteLine(wndSize.ToString());
+                                }
                             }
                         }
                     }
@@ -309,9 +328,9 @@ namespace DeadByDaylight
                                         {
                                             Vector2 vScreen_h3ad = new Vector2(0, 0);
                                             Vector2 vScreen_f33t = new Vector2(0, 0);
-                                            if (Renderer.WorldToScreen(new Vector3(tempVec.X, tempVec.Y, tempVec.Z + 60.0f), out vScreen_h3ad, viewProj, wndMargins, wndSize, W2SType.TypeD3D11))
+                                            if (Renderer.WorldToScreenUE4(new Vector3(tempVec.X, tempVec.Y, tempVec.Z + 60.0f), out vScreen_h3ad, FMinimalViewInfo_Location, FMinimalViewInfo_Rotation, FMinimalViewInfo_FOV, wndMargins, wndSize))
                                             {
-                                                Renderer.WorldToScreen(new Vector3(tempVec.X, tempVec.Y, tempVec.Z - 130.0f), out vScreen_f33t, viewProj, wndMargins, wndSize, W2SType.TypeD3D11);
+                                                Renderer.WorldToScreenUE4(new Vector3(tempVec.X, tempVec.Y, tempVec.Z - 130.0f), out vScreen_f33t, FMinimalViewInfo_Location, FMinimalViewInfo_Rotation, FMinimalViewInfo_FOV, wndMargins, wndSize);
                                                 if (Components.VisualsComponent.DrawSurvivorBox.Enabled)
                                                 {
                                                     Renderer.DrawFPSBox(vScreen_h3ad, vScreen_f33t, Components.VisualsComponent.SurvColor.Color, BoxStance.standing, Components.VisualsComponent.DrawBoxThic.Value, Components.VisualsComponent.DrawBoxBorder.Enabled);
@@ -323,9 +342,9 @@ namespace DeadByDaylight
                                         {
                                             Vector2 vScreen_h3ad = new Vector2(0, 0);
                                             Vector2 vScreen_f33t = new Vector2(0, 0);
-                                            if (Renderer.WorldToScreen(new Vector3(tempVec.X, tempVec.Y, tempVec.Z + 80.0f), out vScreen_h3ad, viewProj, wndMargins, wndSize, W2SType.TypeD3D11))
+                                            if (Renderer.WorldToScreenUE4(new Vector3(tempVec.X, tempVec.Y, tempVec.Z + 80.0f), out vScreen_h3ad, FMinimalViewInfo_Location, FMinimalViewInfo_Rotation, FMinimalViewInfo_FOV, wndMargins, wndSize))
                                             {
-                                                Renderer.WorldToScreen(new Vector3(tempVec.X, tempVec.Y, tempVec.Z - 150.0f), out vScreen_f33t, viewProj, wndMargins, wndSize, W2SType.TypeD3D11);
+                                                Renderer.WorldToScreenUE4(new Vector3(tempVec.X, tempVec.Y, tempVec.Z - 150.0f), out vScreen_f33t, FMinimalViewInfo_Location, FMinimalViewInfo_Rotation, FMinimalViewInfo_FOV, wndMargins, wndSize);
                                                 if (Components.VisualsComponent.DrawKillerBox.Enabled)
                                                 {
                                                     Renderer.DrawFPSBox(vScreen_h3ad, vScreen_f33t, Components.VisualsComponent.KillerColor.Color, BoxStance.standing, Components.VisualsComponent.DrawBoxThic.Value, Components.VisualsComponent.DrawBoxBorder.Enabled);
@@ -338,7 +357,7 @@ namespace DeadByDaylight
                                             if (AActorID == escapeID)
                                             {
                                                 Vector2 vScreen_d3d11 = new Vector2(0, 0);
-                                                if (Renderer.WorldToScreen(tempVec, out vScreen_d3d11, viewProj, wndMargins, wndSize, W2SType.TypeD3D11))
+                                                if (Renderer.WorldToScreenUE4(tempVec, out vScreen_d3d11, FMinimalViewInfo_Location, FMinimalViewInfo_Rotation, FMinimalViewInfo_FOV, wndMargins, wndSize))
                                                 {
                                                     Renderer.DrawText("ESCAPE", vScreen_d3d11, Components.VisualsComponent.MiscColor.Color, 12, TextAlignment.centered, false);
                                                 }
@@ -346,12 +365,17 @@ namespace DeadByDaylight
                                             if (AActorID == hatchID)
                                             {
                                                 Vector2 vScreen_d3d11 = new Vector2(0, 0);
-                                                if (Renderer.WorldToScreen(tempVec, out vScreen_d3d11, viewProj, wndMargins, wndSize, W2SType.TypeD3D11))
+                                                if (Renderer.WorldToScreenUE4(tempVec, out vScreen_d3d11, FMinimalViewInfo_Location, FMinimalViewInfo_Rotation, FMinimalViewInfo_FOV, wndMargins, wndSize))
                                                 {
                                                     Renderer.DrawText("HATCH", vScreen_d3d11, Components.VisualsComponent.MiscColor.Color, 12, TextAlignment.centered, false);
                                                 }
                                             }
                                         }
+                                        //Vector2 retarded = new Vector2(0, 0);
+                                        //if (Renderer.WorldToScreenUE4(tempVec, out retarded, FMinimalViewInfo_Location, FMinimalViewInfo_Rotation, FMinimalViewInfo_FOV, wndMargins, wndSize))
+                                        //{
+                                        //    Renderer.DrawText("WEDIDITBOIZ", retarded.X, retarded.Y, Color.White, 12, TextAlignment.centered, false);
+                                        //}
                                     }
                                 }
                             }
