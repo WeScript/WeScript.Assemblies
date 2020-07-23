@@ -18,20 +18,25 @@ namespace AssaultCubeExample
     class Program
     {
 
-        //[StructLayout(LayoutKind.Explicit)]
-        //public struct GameEntityStruct
-        //{
-        //    [FieldOffset(0x04)]
-        //    public Vector3 headPos;
-        //    [FieldOffset(0x34)]
-        //    public Vector3 feetPos;
-        //    [FieldOffset(0xF8)]
-        //    public Int32 health;
-        //    [FieldOffset(0xFC)]
-        //    public Int32 armor;
-        //    [FieldOffset(0x32C)]
-        //    public Int32 team;
-        //}
+        [StructLayout(LayoutKind.Explicit)]
+        public struct GameEntityStruct
+        {
+            [FieldOffset(0x04)]
+            public Vector3 headpos;
+            [FieldOffset(0x34)]
+            public Vector3 feetpos;
+            [FieldOffset(0x5C)]
+            public float stanceFlt;
+            [FieldOffset(0x82)]
+            public byte m_State;
+            [FieldOffset(0xF8)]
+            public Int32 health;
+            [FieldOffset(0xFC)]
+            public Int32 armor;
+            //sandbox is upset for array of bytes/chars so can't use it to grab player name, if anyone knows a workaround let me know!
+            [FieldOffset(0x32C)]
+            public Int32 playerTeam;
+        }
 
         public static IntPtr processHandle = IntPtr.Zero; //processHandle variable used by OpenProcess (once)
         public static bool gameProcessExists = false; //avoid drawing if the game process is dead, or not existent
@@ -165,8 +170,8 @@ namespace AssaultCubeExample
 
         static void Main(string[] args)
         {
-            Console.WriteLine("WeScript.app AssaultCubeExample Assembly 2.0 Loaded! (now with Aimbot)");
-            
+            Console.WriteLine("WeScript.app AssaultCubeExample Assembly 2.0 Loaded! (now with Aimbot and fixed structs)");
+
             InitializeMenu();
             Renderer.OnRenderer += OnRenderer;
             Memory.OnTick += OnTick;
@@ -248,25 +253,17 @@ namespace AssaultCubeExample
                         var entityAddr = Memory.ReadPointer(processHandle, (IntPtr)(EntityListPtr.ToInt64() + i * 4), isWow64Process);
                         if (entityAddr != IntPtr.Zero)
                         {
-                            //it's a bad practice to read individual offsets, instead - you should read the whole struct with 1 call
-                            var headpos = Memory.ReadVector3(processHandle, (IntPtr)(entityAddr.ToInt64() + 0x04));
-                            var feetpos = Memory.ReadVector3(processHandle, (IntPtr)(entityAddr.ToInt64() + 0x034));
-                            var stanceFlt = Memory.ReadFloat(processHandle, (IntPtr)(entityAddr.ToInt64() + 0x05C));
-                            var m_State = Memory.ReadByte(processHandle, (IntPtr)(entityAddr.ToInt64() + 0x82));
-                            var health = Memory.ReadInt32(processHandle, (IntPtr)(entityAddr.ToInt64() + 0xF8));
-                            //var health = Read<int>(processHandle, (IntPtr)(entityAddr.ToInt64() + 0xF8));
-                            var armor = Memory.ReadInt32(processHandle, (IntPtr)(entityAddr.ToInt64() + 0xFC));
-                            var playerName = Memory.ReadString(processHandle, (IntPtr)(entityAddr.ToInt64() + 0x225), false);
-                            var playerTeam = Memory.ReadInt32(processHandle, (IntPtr)(entityAddr.ToInt64() + 0x32C));
-                            Vector3 headpozbox = new Vector3(headpos.X,headpos.Y, headpos.Z += 1.0f); //hackish method to "lift up" the head position so boxes look cleaner
-                            var isenemybool = (myTeam != playerTeam);
-                            if ((health >= 1) && (health <= 100) && (m_State == 0)) //dummy isAlive check for entities || enum { CS_ALIVE = 0, CS_DEAD, CS_SPAWNING, CS_LAGGED, CS_EDITING, CS_SPECTATE };
+                            var entityData = WeScript.SDK.Utils.SDKUtil.ReadStructure<GameEntityStruct>(processHandle, entityAddr);
+                            var playerName = Memory.ReadString(processHandle, (IntPtr)(entityAddr.ToInt64() + 0x225), false);//there is an issue reading array of bytes/chars in a struct (in this case player names), if you find a way to overcome this let me know
+                            Vector3 headpozbox = new Vector3(entityData.headpos.X, entityData.headpos.Y, entityData.headpos.Z += 1.0f); //hackish method to "lift up" the head position so boxes look cleaner
+                            var isenemybool = (myTeam != entityData.playerTeam);
+                            if ((entityData.health >= 1) && (entityData.health <= 100) && (entityData.m_State == 0)) //dummy isAlive check for entities || enum { CS_ALIVE = 0, CS_DEAD, CS_SPAWNING, CS_LAGGED, CS_EDITING, CS_SPECTATE };
                             {
                                 Vector2 vScreen_head = new Vector2(0, 0); //placeholder for screen coords of player head
                                 Vector2 vScreen_foot = new Vector2(0, 0);
                                 if (Renderer.WorldToScreen(headpozbox, out vScreen_head, matrix, wndMargins, wndSize, W2SType.TypeOGL)) //only draw if the head position is visible on screen
                                 {
-                                    Renderer.WorldToScreen(feetpos, out vScreen_foot, matrix, wndMargins, wndSize, W2SType.TypeOGL); //feet position does not really matter if it's visible
+                                    Renderer.WorldToScreen(entityData.feetpos, out vScreen_foot, matrix, wndMargins, wndSize, W2SType.TypeOGL); //feet position does not really matter if it's visible
                                     {
                                         string dist_str = "";
                                         if (Components.VisualsComponent.DrawTextDist.Enabled)
@@ -278,7 +275,7 @@ namespace AssaultCubeExample
                                         {
                                             if (Components.VisualsComponent.DrawTheVisuals.Enabled)
                                             {
-                                                Renderer.DrawFPSBox(vScreen_head, vScreen_foot, Components.VisualsComponent.EnemiesColor.Color, (stanceFlt == 4.50f ? BoxStance.standing : BoxStance.crouching), Components.VisualsComponent.DrawBoxThic.Value, Components.VisualsComponent.DrawBoxBorder.Enabled,Components.VisualsComponent.DrawBox.Enabled,health,Components.VisualsComponent.DrawBoxHP.Enabled ? 100 : 0,armor,Components.VisualsComponent.DrawBoxAR.Enabled ? 100 : 0, Components.VisualsComponent.DrawTextSize.Enabled ? Components.VisualsComponent.DrawTextSize.Value : 0, dist_str, Components.VisualsComponent.DrawTextName.Enabled ? playerName : "", string.Empty, string.Empty, string.Empty);
+                                                Renderer.DrawFPSBox(vScreen_head, vScreen_foot, Components.VisualsComponent.EnemiesColor.Color, (entityData.stanceFlt == 4.50f ? BoxStance.standing : BoxStance.crouching), Components.VisualsComponent.DrawBoxThic.Value, Components.VisualsComponent.DrawBoxBorder.Enabled,Components.VisualsComponent.DrawBox.Enabled, entityData.health,Components.VisualsComponent.DrawBoxHP.Enabled ? 100 : 0, entityData.armor,Components.VisualsComponent.DrawBoxAR.Enabled ? 100 : 0, Components.VisualsComponent.DrawTextSize.Enabled ? Components.VisualsComponent.DrawTextSize.Value : 0, dist_str, Components.VisualsComponent.DrawTextName.Enabled ? playerName : "", string.Empty, string.Empty, string.Empty);
                                             }
                                         }
                                         else
@@ -287,7 +284,7 @@ namespace AssaultCubeExample
                                             {
                                                 if (Components.VisualsComponent.DrawAlliesEsp.Enabled)
                                                 {
-                                                    Renderer.DrawFPSBox(vScreen_head, vScreen_foot, Components.VisualsComponent.AlliesColor.Color, (stanceFlt == 4.50f ? BoxStance.standing : BoxStance.crouching), Components.VisualsComponent.DrawBoxThic.Value, Components.VisualsComponent.DrawBoxBorder.Enabled, Components.VisualsComponent.DrawBox.Enabled, health, Components.VisualsComponent.DrawBoxHP.Enabled ? 100 : 0, armor, Components.VisualsComponent.DrawBoxAR.Enabled ? 100 : 0, Components.VisualsComponent.DrawTextSize.Enabled ? Components.VisualsComponent.DrawTextSize.Value : 0, dist_str, Components.VisualsComponent.DrawTextName.Enabled ? playerName : "", string.Empty, string.Empty, string.Empty);
+                                                    Renderer.DrawFPSBox(vScreen_head, vScreen_foot, Components.VisualsComponent.AlliesColor.Color, (entityData.stanceFlt == 4.50f ? BoxStance.standing : BoxStance.crouching), Components.VisualsComponent.DrawBoxThic.Value, Components.VisualsComponent.DrawBoxBorder.Enabled, Components.VisualsComponent.DrawBox.Enabled, entityData.health, Components.VisualsComponent.DrawBoxHP.Enabled ? 100 : 0, entityData.armor, Components.VisualsComponent.DrawBoxAR.Enabled ? 100 : 0, Components.VisualsComponent.DrawTextSize.Enabled ? Components.VisualsComponent.DrawTextSize.Value : 0, dist_str, Components.VisualsComponent.DrawTextName.Enabled ? playerName : "", string.Empty, string.Empty, string.Empty);
                                                 }
                                             }
                                         }
@@ -304,16 +301,16 @@ namespace AssaultCubeExample
                                     {
                                         case 0: //head
                                             {
-                                                targetVec.X = headpos.X;
-                                                targetVec.Y = headpos.Y;
-                                                targetVec.Z = (headpos.Z-0.6f); //a bit hardcoded headpoz
+                                                targetVec.X = entityData.headpos.X;
+                                                targetVec.Y = entityData.headpos.Y;
+                                                targetVec.Z = (entityData.headpos.Z-0.6f); //a bit hardcoded headpoz
                                             }
                                             break;
                                         case 1: //body
                                             {
-                                                targetVec.X = headpos.X;
-                                                targetVec.Y = headpos.Y;
-                                                targetVec.Z = (headpos.Z+feetpos.Z)/2; //middle between head and feet
+                                                targetVec.X = entityData.headpos.X;
+                                                targetVec.Y = entityData.headpos.Y;
+                                                targetVec.Z = (entityData.headpos.Z+ entityData.feetpos.Z)/2; //middle between head and feet
                                             }
                                             break;
                                         default: //ignore default case, should never occur
