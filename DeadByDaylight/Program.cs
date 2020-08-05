@@ -89,7 +89,7 @@ namespace DeadByDaylight
             {
                 if (GameBase != IntPtr.Zero)
                 {
-                    var GNamesAddress = Memory.ZwReadPointer(processHandle, (IntPtr)(GameBase.ToInt64() + 0x05C38918), isWow64Process); //48 8B 05 ? ? ? ? 48 85 C0 75 5F
+                    var GNamesAddress = Memory.ZwReadPointer(processHandle, (IntPtr)(GameBase.ToInt64() + 0x0602A548), isWow64Process); //48 8B 05 ? ? ? ? 48 85 C0 75 5F
                     if (GNamesAddress != IntPtr.Zero)
                     {
                         //for (uint i = 0; i <= 12; i++)
@@ -222,7 +222,7 @@ namespace DeadByDaylight
 
             //Renderer.DrawText($"min: {(151000 + (Components.VisualsComponent.OffsetGuesser.Value * 10)).ToString()} max: {(151100 + (Components.VisualsComponent.OffsetGuesser.Value * 10)).ToString()}", new Vector2(300, 300));
             //Matrix viewProj = new Matrix();
-            var UWorld = Memory.ZwReadPointer(processHandle, (IntPtr)GameBase.ToInt64() + 0x5D72BB8, isWow64Process); //48 8B 1D ?? ?? ?? ?? 48 85 DB 74 3B 41 || mov rbx,[DeadByDaylight-Win64-Shipping.exe+5A29158]
+            var UWorld = Memory.ZwReadPointer(processHandle, (IntPtr)GameBase.ToInt64() + 0x6164908, isWow64Process); //48 8B 1D ?? ?? ?? ?? 48 85 DB 74 3B 41 || mov rbx,[DeadByDaylight-Win64-Shipping.exe+5A29158]
             if (UWorld != IntPtr.Zero)
             {
                 var UGameInstance = Memory.ZwReadPointer(processHandle, (IntPtr)UWorld.ToInt64() + 0x170, isWow64Process);
