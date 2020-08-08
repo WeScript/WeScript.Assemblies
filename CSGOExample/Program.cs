@@ -310,7 +310,7 @@ namespace CSGOExample
                                     if (shouldpostmsg)
                                     {
                                         shouldpostmsg = false;
-                                        SendChatMessageToTeam(wndHnd);
+                                        //SendChatMessageToTeam(wndHnd);
                                     }
                                 }
                             }
