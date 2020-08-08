@@ -25,7 +25,7 @@ namespace DeadByDaylight
         public static Vector2 wndSize = new Vector2(0, 0); //get the size of the game window ... to know where to draw
         public static IntPtr GameBase = IntPtr.Zero;
         public static IntPtr GameSize = IntPtr.Zero;
-
+        public static DateTime LastSpacePressedDT = DateTime.Now;
         public static IntPtr GWorldPtr = IntPtr.Zero;
         public static IntPtr GNamesPtr = IntPtr.Zero;
 
@@ -41,6 +41,7 @@ namespace DeadByDaylight
 
         public static Menu RootMenu { get; private set; }
         public static Menu VisualsMenu { get; private set; }
+        public static Menu MiscMenu { get; private set; }
 
         class Components
         {
@@ -57,6 +58,10 @@ namespace DeadByDaylight
                 public static readonly MenuBool DrawMiscInfo = new MenuBool("drawmiscinfos", "Draw hatch and escape positions", true);
                 public static readonly MenuColor MiscColor = new MenuColor("misccolor", "Draw Text Color", new SharpDX.Color(255, 255, 255, 100));
                 //public static readonly MenuSlider OffsetGuesser = new MenuSlider("ofsgues", "Guess the offset", 10, 1, 250);
+            }
+            public static class MiscComponent
+            {
+                public static readonly MenuBool AutoSkillCheck = new MenuBool("autosklchk", "Auto Great Skill Checks", true);
             }
         }
 
@@ -76,11 +81,17 @@ namespace DeadByDaylight
                 //Components.VisualsComponent.OffsetGuesser,
             };
 
+            MiscMenu = new Menu("miscmenu", "Misc Stuff")
+            {
+                Components.MiscComponent.AutoSkillCheck
+            };
+
 
             RootMenu = new Menu("dbdexample", "WeScript.app DeadByDaylight Example Assembly", true)
             {
                 Components.MainAssemblyToggle.SetToolTip("The magical boolean which completely disables/enables the assembly!"),
                 VisualsMenu,
+                MiscMenu,
             };
             RootMenu.Attach();
         }
@@ -229,6 +240,33 @@ namespace DeadByDaylight
                             var APlayerController = Memory.ZwReadPointer(processHandle, (IntPtr)ULocalPlayer.ToInt64() + 0x38, isWow64Process);
                             if (APlayerController != IntPtr.Zero)
                             {
+                                if (Components.MiscComponent.AutoSkillCheck.Enabled) //full credits to https://github.com/GameHackerPM
+                                {
+                                    var ULocalPlayerPawn = Memory.ZwReadPointer(processHandle, (IntPtr)APlayerController.ToInt64() + 0x0378, isWow64Process);
+                                    if (ULocalPlayerPawn != IntPtr.Zero)
+                                    {
+                                        var UInteractionHandler = Memory.ZwReadPointer(processHandle, (IntPtr)ULocalPlayerPawn.ToInt64() + 0x0BF0, isWow64Process);
+
+                                        if (UInteractionHandler != IntPtr.Zero)
+                                        {
+                                            var USkillCheck = Memory.ZwReadPointer(processHandle, (IntPtr)UInteractionHandler.ToInt64() + 0x0278, isWow64Process);
+                                            if (USkillCheck != IntPtr.Zero)
+                                            {
+                                                var isDisplayed = Memory.ZwReadBool(processHandle, (IntPtr)USkillCheck.ToInt64() + 0x0308);
+                                                if (isDisplayed && LastSpacePressedDT.AddMilliseconds(200) < DateTime.Now)
+                                                {
+                                                    var currentProgress = Memory.ZwReadFloat(processHandle, (IntPtr)USkillCheck.ToInt64() + 0x02A0);
+                                                    var startSuccessZone = Memory.ZwReadFloat(processHandle, (IntPtr)USkillCheck.ToInt64() + 0x0270);
+                                                    if (currentProgress > startSuccessZone)
+                                                    {
+                                                        LastSpacePressedDT = DateTime.Now;
+                                                        Input.KeyPress(VirtualKeyCode.Space);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
                                 var APlayerCameraManager = Memory.ZwReadPointer(processHandle, (IntPtr)APlayerController.ToInt64() + 0x3E0, isWow64Process);
                                 if (APlayerCameraManager != IntPtr.Zero)
                                 {
