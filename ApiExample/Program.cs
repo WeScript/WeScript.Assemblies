@@ -246,6 +246,7 @@ namespace ApiExample
             if (Components.CirclesComponent.DrawTheCircles.Enabled)
             {
                 Renderer.DrawCircle(500, 500, Components.CirclesComponent.DrawCircleRad.Value, Components.CirclesComponent.DrawCircleWid.Value, Components.CirclesComponent.DrawCircleAA.Enabled, Components.CirclesComponent.DrawCircleQ.Value, Components.CirclesComponent.DrawCircleCol.Color);
+                Renderer.DrawCircleFilled(500,500, Components.CirclesComponent.DrawCircleRad.Value+10, Components.CirclesComponent.DrawCircleCol.Color, Components.CirclesComponent.DrawCircleQ.Value);
             }
 
             if (Components.SpriteComponent.DrawTheSprites.Enabled)
