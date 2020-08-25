@@ -25,6 +25,7 @@ namespace FallGuysCheeto
         public static bool isGameOnTop = false; //we should avoid drawing while the game is not set on top
         public static bool isOverlayOnTop = false; //we might allow drawing visuals, while the user is working with the "menu"
         public static uint PROCESS_ALL_ACCESS = 0x1FFFFF; //hardcoded access right to OpenProcess
+        public static IntPtr GameAssembly_dll = IntPtr.Zero;
         public static IntPtr characterPtr = IntPtr.Zero;
        
 
@@ -85,11 +86,35 @@ namespace FallGuysCheeto
 
         static void Main(string[] args)
         {
-            Console.WriteLine("FallGuys Cheeto assembly loaded! (Simple trainer released 18 August 2020)");
+            Console.WriteLine("FallGuys Cheeto assembly loaded! (Simple trainer updated 25 August 2020)");
             InitializeMenu();
             Memory.OnTick += OnTick;
         }
 
+        public static void writeCheatos(IntPtr processHandle, IntPtr characterPtr, bool reset)
+        {
+            Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0x18), reset ? 9.5f : (Components.normalMaxSpeed.Value * 0.1f));
+            Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0x1C), reset ? 9.5f : (Components.getUpMaxSpeed.Value * 0.1f));
+            Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0x20), reset ? 7.0f : (Components.rollingMaxSpeed.Value * 0.1f));
+            Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0x24), reset ? 0.2f : (Components.rollingInAirMaxSpeed.Value * 0.1f));
+            Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0x28), reset ? 5.0f : (Components.grabbingMaxSpeed.Value * 0.1f));
+            Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0x2C), reset ? 7.0f : (Components.grabbingAttemptMaxSpeed.Value * 0.1f));
+            Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0x30), reset ? 8.0f : (Components.carryMaxSpeed.Value * 0.1f));
+            Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0x34), reset ? 8.0f : (Components.normalTurnSpeed.Value * 0.1f));
+            Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0x38), reset ? 4.0f : (Components.aerialTurnSpeed.Value * 0.1f));
+            Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0x3C), reset ? 1.1f : (Components.diveTurnSpeed.Value * 0.1f));
+            Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0x40), reset ? 3.0f : (Components.rollingTurnSpeed.Value * 0.1f));
+            Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0x44), reset ? 0.3f : (Components.rollingInAirTurnSpeed.Value * 0.1f));
+            Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0x48), reset ? 4.0f : (Components.grabbingTurnSpeed.Value * 0.1f));
+            Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0x4C), reset ? 6.0f : (Components.grabbingAttemptTurnSpeed.Value * 0.1f));
+            Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0x50), reset ? 0.5f : (Components.grabbedTurnSpeed.Value * 0.1f));
+            Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0xB0), reset ? 48.0f : (Components.maxSlopeIncline.Value * 0.1f));
+            Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0xB4), reset ? 30.0f : (Components.maxSlopeInclineForAnim.Value * 0.1f));
+            Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0xB8), reset ? 1.5f : (Components.gravityScale.Value * 0.1f));
+            Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0xBC), reset ? 40.0f : (Components.maxGravityVelocity.Value * 0.1f));
+            Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0xC0), reset ? 0.75f : (Components.unintentionalMoveSpeedThreshold.Value * 0.01f));
+            Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0xC4), reset ? 1.5f : (Components.unintentionalMoveSpeedThresholdDuringEmote.Value * 0.1f));
+        }
 
         private static void OnTick(int counter, EventArgs args)
         {
@@ -121,6 +146,10 @@ namespace FallGuysCheeto
                     isGameOnTop = Renderer.IsGameOnTop(wndHnd);
                     isOverlayOnTop = Overlay.IsOnTop();
 
+                    if (GameAssembly_dll == IntPtr.Zero)
+                    {
+                        GameAssembly_dll = Memory.GetModule(processHandle, "GameAssembly.dll");
+                    }
                     //since we're not drawing, the rest of the code can be put here.
                     if (characterPtr == IntPtr.Zero)
                     {
@@ -130,31 +159,38 @@ namespace FallGuysCheeto
                         {
                             Console.WriteLine($"FOUND Character Base Ptr: {characterPtr.ToString("X")}");
                         }
+                        else
+                        {
+                            Console.WriteLine("FAILED TO FIND Character Base Ptr :(");
+                        }
                     }
                     else
                     {
                         //we are in game and got char ptr ... continue with menu modifications every tick
-                        Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0x18), (Components.normalMaxSpeed.Value*0.1f));
-                        Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0x1C), (Components.getUpMaxSpeed.Value * 0.1f));
-                        Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0x20), (Components.rollingMaxSpeed.Value * 0.1f));
-                        Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0x24), (Components.rollingInAirMaxSpeed.Value * 0.1f));
-                        Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0x28), (Components.grabbingMaxSpeed.Value * 0.1f));
-                        Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0x2C), (Components.grabbingAttemptMaxSpeed.Value * 0.1f));
-                        Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0x30), (Components.carryMaxSpeed.Value * 0.1f));
-                        Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0x34), (Components.normalTurnSpeed.Value * 0.1f));
-                        Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0x38), (Components.aerialTurnSpeed.Value * 0.1f));
-                        Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0x3C), (Components.diveTurnSpeed.Value * 0.1f));
-                        Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0x40), (Components.rollingTurnSpeed.Value * 0.1f));
-                        Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0x44), (Components.rollingInAirTurnSpeed.Value * 0.1f));
-                        Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0x48), (Components.grabbingTurnSpeed.Value * 0.1f));
-                        Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0x4C), (Components.grabbingAttemptTurnSpeed.Value * 0.1f));
-                        Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0x50), (Components.grabbedTurnSpeed.Value * 0.1f));
-                        Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0xB0), (Components.maxSlopeIncline.Value * 0.1f));
-                        Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0xB4), (Components.maxSlopeInclineForAnim.Value * 0.1f));
-                        Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0xB8), (Components.gravityScale.Value * 0.1f));
-                        Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0xBC), (Components.maxGravityVelocity.Value * 0.1f));
-                        Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0xC0), (Components.unintentionalMoveSpeedThreshold.Value * 0.01f));
-                        Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0xC4), (Components.unintentionalMoveSpeedThresholdDuringEmote.Value * 0.1f));
+
+                        IntPtr timeToRunNextCharacterControllerDataCheckPTR = SDKUtil.ReadPointerChain(processHandle, (IntPtr)(GameAssembly_dll.ToInt64() + 0x02BC6108), isWow64Process, 0xB8, 0x0, 0xB8, 0x10, 0x30, 0x1C8);
+                        //Console.WriteLine(timeToRunNextCharacterControllerDataCheck.ToString("X"));
+                        if (timeToRunNextCharacterControllerDataCheckPTR != IntPtr.Zero)
+                        {
+                            var timeToRunNextCharacterControllerDataCheck = Memory.ReadFloat(processHandle, (IntPtr)timeToRunNextCharacterControllerDataCheckPTR.ToInt64() + 0x10);
+                            if ((timeToRunNextCharacterControllerDataCheck > 0) && (timeToRunNextCharacterControllerDataCheck < 100000000.0f))
+                            {                                                                                             
+                                Memory.WriteFloat(processHandle, (IntPtr)(timeToRunNextCharacterControllerDataCheckPTR.ToInt64() + 0x10), 100000000.0f);
+                            }
+                            else
+                            {
+                                var doublecheck = Memory.ReadFloat(processHandle, (IntPtr)timeToRunNextCharacterControllerDataCheckPTR.ToInt64() + 0x10);
+                                if (doublecheck == 100000000.0f)
+                                {
+                                    //DelayAction.Queue(() => writeCheatosz(processHandle, characterPtr), 5000.0f);
+                                    writeCheatos(processHandle, characterPtr, false);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            writeCheatos(processHandle, characterPtr, true);
+                        }
                     }
 
                 }
@@ -164,6 +200,7 @@ namespace FallGuysCheeto
                     processHandle = IntPtr.Zero; //set it like this just in case for C# logic
                     gameProcessExists = false;
                     characterPtr = IntPtr.Zero;
+                    GameAssembly_dll = IntPtr.Zero;
                 }
             }
         }
