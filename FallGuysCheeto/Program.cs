@@ -33,7 +33,11 @@ namespace FallGuysCheeto
 
         class Components
         {
-            public static readonly MenuSlider normalMaxSpeed = new MenuSlider("normalMaxSpeed", "normalMaxSpeed", 95, 95, 500);
+            public static readonly MenuKeyBind keepFlying = new MenuKeyBind("keepflying", "Keep staying in air by holding jump key", VirtualKeyCode.Space, KeybindType.Hold, false);
+            public static readonly MenuBool superGrab = new MenuBool("superGrab", "Enable SUPER GRAB", true);
+            public static readonly MenuSlider normalMaxSpeed = new MenuSlider("normalMaxSpeed", "normalMaxSpeed", 500, 95, 500);
+            public static readonly MenuSlider gravityScale = new MenuSlider("gravityScale", "gravityScale", 1, 1, 15);
+            public static readonly MenuSeperator sep1 = new MenuSeperator("sep1");
             public static readonly MenuSlider getUpMaxSpeed = new MenuSlider("getUpMaxSpeed", "getUpMaxSpeed", 95, 95, 500);
             public static readonly MenuSlider rollingMaxSpeed = new MenuSlider("rollingMaxSpeed", "rollingMaxSpeed", 70, 70, 500);
             public static readonly MenuSlider rollingInAirMaxSpeed = new MenuSlider("rollingInAirMaxSpeed", "rollingInAirMaxSpeed", 2, 2, 500);
@@ -50,7 +54,6 @@ namespace FallGuysCheeto
             public static readonly MenuSlider grabbedTurnSpeed = new MenuSlider("grabbedTurnSpeed", "grabbedTurnSpeed", 5, 5, 500);
             public static readonly MenuSlider maxSlopeIncline = new MenuSlider("maxSlopeIncline", "maxSlopeIncline", 480, 480, 5000);
             public static readonly MenuSlider maxSlopeInclineForAnim = new MenuSlider("maxSlopeInclineForAnim", "maxSlopeInclineForAnim", 300, 300, 3000);
-            public static readonly MenuSlider gravityScale = new MenuSlider("gravityScale", "gravityScale", 15, 1, 15);
             public static readonly MenuSlider maxGravityVelocity = new MenuSlider("maxGravityVelocity", "maxGravityVelocity", 400, 400, 5000);
             public static readonly MenuSlider unintentionalMoveSpeedThreshold = new MenuSlider("unintentionalMoveSpeedThreshold", "unintentionalMoveSpeedThreshold", 75, 75, 5000);
             public static readonly MenuSlider unintentionalMoveSpeedThresholdDuringEmote = new MenuSlider("unintentionalMoveSpeedThresholdDuringEmote", "unintentionalMoveSpeedThresholdDuringEmote", 15, 15, 500);
@@ -58,9 +61,13 @@ namespace FallGuysCheeto
 
         public static void InitializeMenu()
         {
-            RootMenu = new Menu("fallguystrainer", "WeScript.app FallGuys Cheeto Trainer", true)
+            RootMenu = new Menu("fallguystrainer", "WeScript.app FallGuys Cheeto Trainer 1.1", true)
             {
+                Components.keepFlying,
+                Components.superGrab,
                 Components.normalMaxSpeed,
+                Components.gravityScale,
+                Components.sep1,
                 Components.getUpMaxSpeed,
                 Components.rollingMaxSpeed,
                 Components.rollingInAirMaxSpeed,
@@ -76,7 +83,6 @@ namespace FallGuysCheeto
                 Components.grabbedTurnSpeed,
                 Components.maxSlopeIncline,
                 Components.maxSlopeInclineForAnim,
-                Components.gravityScale,
                 Components.maxGravityVelocity,
                 Components.unintentionalMoveSpeedThreshold,
                 Components.unintentionalMoveSpeedThresholdDuringEmote,
@@ -86,7 +92,7 @@ namespace FallGuysCheeto
 
         static void Main(string[] args)
         {
-            Console.WriteLine("FallGuys Cheeto assembly loaded! (Simple trainer updated 25 August 2020)");
+            Console.WriteLine("FallGuys Cheeto 1.1 assembly loaded! (Simple trainer updated 28 August 2020)");
             InitializeMenu();
             Memory.OnTick += OnTick;
         }
@@ -111,9 +117,42 @@ namespace FallGuysCheeto
             Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0xB0), reset ? 48.0f : (Components.maxSlopeIncline.Value * 0.1f));
             Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0xB4), reset ? 30.0f : (Components.maxSlopeInclineForAnim.Value * 0.1f));
             Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0xB8), reset ? 1.5f : (Components.gravityScale.Value * 0.1f));
-            Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0xBC), reset ? 40.0f : (Components.maxGravityVelocity.Value * 0.1f));
+            if (Components.keepFlying.Enabled)
+            {
+                Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0xBC), reset ? 40.0f : -0.1f);
+            }
+            else
+            {
+                Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0xBC), reset ? 40.0f : (Components.maxGravityVelocity.Value * 0.1f));
+            }
+            
             Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0xC0), reset ? 0.75f : (Components.unintentionalMoveSpeedThreshold.Value * 0.01f));
             Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0xC4), reset ? 1.5f : (Components.unintentionalMoveSpeedThresholdDuringEmote.Value * 0.1f));
+            if (Components.superGrab.Enabled)
+            {
+                Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0x1A8), reset ? 6.0f : 100000000.0f); //playerGrabDetectRadius
+                Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0x1AC), reset ? 2.0f : 100000000.0f); //playerGrabCheckDistance
+                Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0x20C), reset ? 6.0f : 100000000.0f); //playerGrabberMaxForce
+                Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0x1C4), reset ? 1.2f : 100000000.0f); //playerGrabBreakTime
+                Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0x134), reset ? 1.0f : 100000000.0f); //armLength
+                Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0x1B0), reset ? 1.0f : 100000000.0f); //playerGrabCheckPredictionBase
+                Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0x218), reset ? 0.5f : 1.0f); //playerGrabImmediateVelocityReduction
+                Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0x214), reset ? 0.5f : 1.0f); //playerGrabberDragDirectionContribution
+                Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0x17C), reset ? 0.5f : 0.0f); //grabCooldown
+                Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0x1E4), reset ? 2.0f : 0.0f); //playerGrabRegrabDelay
+                Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0x1C8), reset ? 0.01999999955f : 0.0f); //playerGrabBreakTimeJumpInfluence
+                Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0x170), reset ? 1.0f : 0.0f); //forceReleaseRegrabCooldown
+                Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0x130), reset ? 75.0f : 360.0f); //breakGrabAngle
+                Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0x210), reset ? 1.0f : 0.0f); //playerGrabbeeMaxForce
+                Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0x1E0), reset ? 7.0f : 0.0f); //playerGrabBreakSeparationForce
+                Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0x1E8), reset ? 1.5f : 0.0f); //playerGrabbeeInvulnerabilityWindow
+                Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0x180), reset ? 10.0f : 100000000.0f); //objectGrabAdditionalForceScale
+                Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0x184), reset ? 3.0f : 100000000.0f); //objectGrabAdditionalPushForceScale
+                Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0x188), reset ? 1.0f : 0.0f); //carryPickupDuration
+                Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0x1A4), reset ? 1.0f : 0.0f); //carryAlwaysLoseTussleWhenGrabbed
+                Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0x204), reset ? 0.1f : 0.7f); //playerGrabberVelocityComponent
+                Memory.WriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() - 0x18 + 0x208), reset ? 0.2f : 1.0f); //playerGrabbeeVelocityComponent
+            }
         }
 
         private static void OnTick(int counter, EventArgs args)
