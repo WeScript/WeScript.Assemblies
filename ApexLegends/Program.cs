@@ -151,7 +151,7 @@ namespace ApexLegends
 
         static void Main(string[] args)
         {
-            Console.WriteLine("WeScript.app ApexLegends Assembly 3.0 Loaded (with only driver option 29.08.2020)!");
+            Console.WriteLine("WeScript.app ApexLegends Example Assembly 3.0 Loaded (with only driver option)!");
             InitializeMenu();
             Renderer.OnRenderer += OnRenderer;
             Memory.OnTick += OnTick;
@@ -362,7 +362,7 @@ namespace ApexLegends
                     var calcPid = Memory.GetPIDFromHWND(wndHnd); //get the PID of that same process
                     if (calcPid > 0) //if we got the PID
                     {
-                        processHandle = Memory.OpenProcess(PROCESS_ALL_ACCESS, calcPid); //the driver will get a stripped handle, but doesn't matter, it's still OK
+                        processHandle = Memory.ZwOpenProcess(PROCESS_ALL_ACCESS, calcPid); //the driver will get a stripped handle, but doesn't matter, it's still OK
                         if (processHandle != IntPtr.Zero)
                         {
                             //if we got access to the game, check if it's x64 bit, this is needed when reading pointers, since their size is 4 for x86 and 8 for x64
@@ -390,14 +390,14 @@ namespace ApexLegends
 
                     if (GameBase == IntPtr.Zero) //do we have access to Gamebase address?
                     {
-                        GameBase = Memory.GetModule(processHandle, null, isWow64Process); //if not, find it
+                        GameBase = Memory.ZwGetModule(processHandle, null, isWow64Process); //if not, find it
                         //Console.WriteLine($"GameBase: {GameBase.ToString("X")}");
                     }
                     else
                     {
                         if (GameSize == IntPtr.Zero)
                         {
-                            GameSize = Memory.GetModuleSize(processHandle, null, isWow64Process);
+                            GameSize = Memory.ZwGetModuleSize(processHandle, null, isWow64Process);
                         }
                         else
                         {
@@ -405,19 +405,19 @@ namespace ApexLegends
                             //Console.WriteLine($"GameSize: {GameSize.ToString("X")}"); //easy way to check if we got reading rights
                             if (EntityListPtr == IntPtr.Zero)
                             {
-                                EntityListPtr = EntityListPtr = Memory.FindSignature(processHandle, GameBase, GameSize, "0F B7 C8 48 8D 05 ? ? ? ? 48 C1 E1 05 48 03 C8", 0x6); //(IntPtr)(GameBase.ToInt64() + 0x175EC28);//
+                                EntityListPtr = EntityListPtr = Memory.ZwFindSignature(processHandle, GameBase, GameSize, "0F B7 C8 48 8D 05 ? ? ? ? 48 C1 E1 05 48 03 C8", 0x6); //(IntPtr)(GameBase.ToInt64() + 0x175EC28);//
                             }
                             if (LocalPlayerPtr == IntPtr.Zero)
                             {
-                                LocalPlayerPtr = LocalPlayerPtr = Memory.FindSignature(processHandle, GameBase, GameSize, "48 8B 05 ? ? ? ? 48 0F 44 C7 48 89 05", 0x3); //(IntPtr)(GameBase.ToInt64() + 0x1B0D448);//
+                                LocalPlayerPtr = LocalPlayerPtr = Memory.ZwFindSignature(processHandle, GameBase, GameSize, "48 8B 05 ? ? ? ? 48 0F 44 C7 48 89 05", 0x3); //(IntPtr)(GameBase.ToInt64() + 0x1B0D448);//
                             }
                             if (ViewRenderPtr == IntPtr.Zero)
                             {
-                                ViewRenderPtr = ViewRenderPtr = Memory.FindSignature(processHandle, GameBase, GameSize, "48 8B 0D ? ? ? ? 44 0F 28 C2", 0x3); //(IntPtr)(GameBase.ToInt64() + 0x3F5C2C0);//
+                                ViewRenderPtr = ViewRenderPtr = Memory.ZwFindSignature(processHandle, GameBase, GameSize, "48 8B 0D ? ? ? ? 44 0F 28 C2", 0x3); //(IntPtr)(GameBase.ToInt64() + 0x3F5C2C0);//
                             }
                             if (ViewMatrixOffs == IntPtr.Zero)
                             {
-                                ViewMatrixOffs = Memory.FindSignature(processHandle, GameBase, GameSize, "48 89 AB ? ? ? ? 4C 89 9B", 0x3, true); //(IntPtr)0x1B3BD0;
+                                ViewMatrixOffs = Memory.ZwFindSignature(processHandle, GameBase, GameSize, "48 89 AB ? ? ? ? 4C 89 9B", 0x3, true); //(IntPtr)0x1B3BD0;
                             }
 
                             //Console.WriteLine($"EntityListPtr: {EntityListPtr.ToString("X")}");
