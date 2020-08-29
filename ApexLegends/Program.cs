@@ -40,24 +40,24 @@ namespace ApexLegends
         public static int mySecondsBefore = 0;
         public static bool shouldpostmsg = false;
 
-        public static uint Velocity = 0x140; //vec3
-        public static uint Origin = 0x14C; //vec3
-        public static uint Shield = 0x170; //int
-        public static uint MaxShield = 0x174; //int
-        public static uint Health = 0x3E0; //int
-        public static uint Team = 0x3F0; //int
-        public static uint BoundingBox = 0x474; //vec3
-        public static uint MaxHealth = 0x510; //int
-        public static uint BoneClass = 0xED8; //ptr
+        public static uint Velocity = 0x140; //vec3 ///////upddddd!
+        public static uint Origin = 0x14C; //vec3 ///////upddddd!
+        public static uint Shield = 0x170; //int ///////upddddd!
+        public static uint MaxShield = 0x174; //int ///////upddddd!
+        public static uint Health = 0x420; //int ///////upddddd!
+        public static uint Team = 0x430; //int ///////upddddd!
+        public static uint BoundingBox = 0x4B4; //vec3 ///////upddddd!
+        public static uint MaxHealth = 0x550; //int ///////upddddd!
+        public static uint BoneClass = 0xF18; //ptr ///////upddddd!
 
-        public static uint m_latestPrimaryWeapons = 0x1934; //int
-        public static uint BulletSpeed = 0x1D48; //float
+        public static uint m_latestPrimaryWeapons = 0x1a0c; //int ///////upddddd!
+        public static uint BulletSpeed = 0x1e08; //float ///////upddddd!
 
-        public static uint CameraPosition = 0x1DA4;
-        public static uint CameraAngles = 0x1DB0;
+        public static uint CameraPosition = 0x1e6c; ///////upddddd!
+        public static uint CameraAngles = 0x1e6c + 0xC; ///////upddddd!
         //public static uint AimPunch = 0x2300;
-        public static uint AnglesStatic = 0x23B8;
-        public static uint ViewAngles = 0x23C8;
+        public static uint AnglesStatic = 0x24A0 - 0x10;  ///////upddddd!
+        public static uint ViewAngles = 0x24A0;  ///////upddddd!
         //public static uint BleedOutState = 0x2590; //0 = alive; 2 = downed
 
 
@@ -151,10 +151,14 @@ namespace ApexLegends
 
         static void Main(string[] args)
         {
-            Console.WriteLine("WeScript.app ApexLegends Example Assembly 2.0 Loaded (With Reconnect for free)!");
+            Console.WriteLine("WeScript.app ApexLegends Assembly 3.0 Loaded (with only driver option 29.08.2020)!");
             InitializeMenu();
             Renderer.OnRenderer += OnRenderer;
             Memory.OnTick += OnTick;
+            if (!Memory.InitDriver(DriverName.frost_64))
+            {
+                Console.WriteLine("[ERROR] Failed to initialize driver for some reason...");
+            }
         }
 
 
@@ -165,16 +169,16 @@ namespace ApexLegends
             {
                 return IntPtr.Zero;
             }
-            //var entity_list = Memory.ReadPointer(processHandle, EntityListPtr, isWow64Process);
+            //var entity_list = Memory.ZwReadPointer(processHandle, EntityListPtr, isWow64Process);
             var entity_list = EntityListPtr;
             if (entity_list != IntPtr.Zero)
             {
-                var base_entity = Memory.ReadDWORD64(processHandle, entity_list);
+                var base_entity = Memory.ZwReadDWORD64(processHandle, entity_list);
                 if (base_entity == 0)
                 {
                     return IntPtr.Zero;
                 }
-                var entity_itself = Memory.ReadPointer(processHandle, (IntPtr)(entity_list.ToInt64() + (index << 5)), isWow64Process);
+                var entity_itself = Memory.ZwReadPointer(processHandle, (IntPtr)(entity_list.ToInt64() + (index << 5)), isWow64Process);
                 return entity_itself;
             }
             return IntPtr.Zero;
@@ -225,12 +229,12 @@ namespace ApexLegends
         private static Vector3 ReadBonePos(IntPtr playerPtr, int boneIDX)
         {
             Vector3 targetVec = new Vector3(0, 0, 0);
-            var BoneMatrixPtr = Memory.ReadPointer(processHandle, (IntPtr)(playerPtr.ToInt64() + BoneClass), isWow64Process);
+            var BoneMatrixPtr = Memory.ZwReadPointer(processHandle, (IntPtr)(playerPtr.ToInt64() + BoneClass), isWow64Process);
             if (BoneMatrixPtr != IntPtr.Zero)
             {
-                targetVec.X = Memory.ReadFloat(processHandle, (IntPtr)(BoneMatrixPtr.ToInt64() + 0x30 * boneIDX + 0x0C));
-                targetVec.Y = Memory.ReadFloat(processHandle, (IntPtr)(BoneMatrixPtr.ToInt64() + 0x30 * boneIDX + 0x1C));
-                targetVec.Z = Memory.ReadFloat(processHandle, (IntPtr)(BoneMatrixPtr.ToInt64() + 0x30 * boneIDX + 0x2C));
+                targetVec.X = Memory.ZwReadFloat(processHandle, (IntPtr)(BoneMatrixPtr.ToInt64() + 0x30 * boneIDX + 0x0C));
+                targetVec.Y = Memory.ZwReadFloat(processHandle, (IntPtr)(BoneMatrixPtr.ToInt64() + 0x30 * boneIDX + 0x1C));
+                targetVec.Z = Memory.ZwReadFloat(processHandle, (IntPtr)(BoneMatrixPtr.ToInt64() + 0x30 * boneIDX + 0x2C));
             }
             return targetVec;
         }
@@ -314,35 +318,35 @@ namespace ApexLegends
         //    Input.KeyPress(VirtualKeyCode.Enter);
         //}
 
-        public static void SendMessageToOrigin()
-        {
-            var originPID = Memory.GetPIDForProcess("Origin.exe");
-            if (originPID > 0)
-            {
-                IntPtr originWindow = Memory.FindMainWindow(originPID);
-                //Console.WriteLine($"OriginWindow: {originWindow.ToString()}");
-                Input.SetFocusWS(originWindow);
-                Input.SetForegroundWindowWS(originWindow);
-                Input.KeyDown(VirtualKeyCode.Alt);
-                Input.KeyPress(VirtualKeyCode.O);
-                Input.KeyPress(VirtualKeyCode.G);
-                Input.KeyUp(VirtualKeyCode.Alt);
-                Input.SleepWS(500);
-                Input.SetFocusWS(originWindow);
-                Input.SetForegroundWindowWS(originWindow);
-                Input.KeyDown(VirtualKeyCode.Alt);
-                Input.KeyPress(VirtualKeyCode.O);
-                Input.KeyPress(VirtualKeyCode.G);
-                Input.KeyUp(VirtualKeyCode.Alt);
-                Input.KeyPress(VirtualKeyCode.Alt); //to unstuck the key ... if possible
-                Input.SleepWS(500);
-                IntPtr gameWindowz = Memory.FindWindowClassName("Respawn001");
-                Input.SetFocusWS(gameWindowz);
-                Input.SetForegroundWindowWS(gameWindowz);
+        //public static void SendMessageToOrigin()
+        //{
+        //    var originPID = Memory.GetPIDForProcess("Origin.exe");
+        //    if (originPID > 0)
+        //    {
+        //        IntPtr originWindow = Memory.FindMainWindow(originPID);
+        //        //Console.WriteLine($"OriginWindow: {originWindow.ToString()}");
+        //        Input.SetFocusWS(originWindow);
+        //        Input.SetForegroundWindowWS(originWindow);
+        //        Input.KeyDown(VirtualKeyCode.Alt);
+        //        Input.KeyPress(VirtualKeyCode.O);
+        //        Input.KeyPress(VirtualKeyCode.G);
+        //        Input.KeyUp(VirtualKeyCode.Alt);
+        //        Input.SleepWS(500);
+        //        Input.SetFocusWS(originWindow);
+        //        Input.SetForegroundWindowWS(originWindow);
+        //        Input.KeyDown(VirtualKeyCode.Alt);
+        //        Input.KeyPress(VirtualKeyCode.O);
+        //        Input.KeyPress(VirtualKeyCode.G);
+        //        Input.KeyUp(VirtualKeyCode.Alt);
+        //        Input.KeyPress(VirtualKeyCode.Alt); //to unstuck the key ... if possible
+        //        Input.SleepWS(500);
+        //        IntPtr gameWindowz = Memory.FindWindowClassName("Respawn001");
+        //        Input.SetFocusWS(gameWindowz);
+        //        Input.SetForegroundWindowWS(gameWindowz);
 
-            }
+        //    }
 
-        }
+        //}
 
 
         private static void OnTick(int counter, EventArgs args)
@@ -422,14 +426,14 @@ namespace ApexLegends
 
                             //if (Components.MiscComponent.SupportInChat.Enabled)
                             //{
-                                if (isGameOnTop)
-                                {
-                                    if (shouldpostmsg)
-                                    {
-                                        shouldpostmsg = false;
-                                        SendMessageToOrigin();
-                                    }
-                                }
+                            //if (isGameOnTop)
+                            //{
+                            //    if (shouldpostmsg)
+                            //    {
+                            //        shouldpostmsg = false;
+                            //        SendMessageToOrigin();
+                            //    }
+                            //}
                             //}
 
                         }
@@ -462,39 +466,39 @@ namespace ApexLegends
             if (!Components.MainAssemblyToggle.Enabled) return; //main menu boolean to toggle the cheat on or off
 
 
-            if ((timeWithLP > 0) && (timeWithLP < timeToPlayWithoutDC))
-            {
-                var secondsLeft = (timeToPlayWithoutDC - timeWithLP) / 1000;
+            //if ((timeWithLP > 0) && (timeWithLP < timeToPlayWithoutDC))
+            //{
+            //    var secondsLeft = (timeToPlayWithoutDC - timeWithLP) / 1000;
 
-                //if (Components.MiscComponent.SupportInChat.Enabled)
-                {
-                    if (secondsLeft == 5)
-                    {
-                        if (mySecondsBefore == 0)
-                        {
-                            mySecondsBefore = 5;
-                            shouldpostmsg = true;
-                        }
-                    }
-                    else
-                    {
-                        mySecondsBefore = 0;
-                    }
-                }
+            //    //if (Components.MiscComponent.SupportInChat.Enabled)
+            //    {
+            //        if (secondsLeft == 5)
+            //        {
+            //            if (mySecondsBefore == 0)
+            //            {
+            //                mySecondsBefore = 5;
+            //                shouldpostmsg = true;
+            //            }
+            //        }
+            //        else
+            //        {
+            //            mySecondsBefore = 0;
+            //        }
+            //    }
 
 
-                if (Components.VisualsComponent.DrawTimeLeft.Enabled)
-                {
-                    if (secondsLeft < 15)
-                    {
-                        Renderer.DrawText($"!! {secondsLeft.ToString()} !!", GameCenterPos.X, GameCenterPos.Y + (GameCenterPos.Y / 2), new Color(255, 0, 0), 72, TextAlignment.centered);
-                    }
-                    else
-                    {
-                        Renderer.DrawText(secondsLeft.ToString(), GameCenterPos.X, GameCenterPos.Y + (GameCenterPos.Y / 2), new Color(255, 255, 255), 40, TextAlignment.centered);
-                    }
-                }
-            }
+            //    if (Components.VisualsComponent.DrawTimeLeft.Enabled)
+            //    {
+            //        if (secondsLeft < 15)
+            //        {
+            //            Renderer.DrawText($"!! {secondsLeft.ToString()} !!", GameCenterPos.X, GameCenterPos.Y + (GameCenterPos.Y / 2), new Color(255, 0, 0), 72, TextAlignment.centered);
+            //        }
+            //        else
+            //        {
+            //            Renderer.DrawText(secondsLeft.ToString(), GameCenterPos.X, GameCenterPos.Y + (GameCenterPos.Y / 2), new Color(255, 255, 255), 40, TextAlignment.centered);
+            //        }
+            //    }
+            //}
 
             double fClosestPos = 999999;
             AimTarg2D = new Vector2(0, 0);
@@ -502,34 +506,34 @@ namespace ApexLegends
 
             if ((ViewRenderPtr != IntPtr.Zero) && (ViewMatrixOffs != IntPtr.Zero))
             {
-                var matPtr0 = Memory.ReadPointer(processHandle, (IntPtr)(ViewRenderPtr.ToInt64()), isWow64Process);
+                var matPtr0 = Memory.ZwReadPointer(processHandle, (IntPtr)(ViewRenderPtr.ToInt64()), isWow64Process);
                 if (matPtr0 != IntPtr.Zero)
                 {
-                    var matptr1 = Memory.ReadPointer(processHandle, (IntPtr)(matPtr0.ToInt64() + ViewMatrixOffs.ToInt64()), isWow64Process);
+                    var matptr1 = Memory.ZwReadPointer(processHandle, (IntPtr)(matPtr0.ToInt64() + ViewMatrixOffs.ToInt64()), isWow64Process);
                     if (matptr1 != IntPtr.Zero)
                     {
                         //Console.WriteLine($"{matptr1.ToString("X")}");
-                        var matrix = Memory.ReadMatrix(processHandle, matptr1);
-                        var localPlayer = Memory.ReadPointer(processHandle, LocalPlayerPtr, isWow64Process);
-                        //Console.WriteLine($"{localPlayer.ToString("X")}");
+                        var matrix = Memory.ZwReadMatrix(processHandle, matptr1);
+                        var localPlayer = Memory.ZwReadPointer(processHandle, LocalPlayerPtr, isWow64Process);
+                        Console.WriteLine($"{localPlayer.ToString("X")}");
                         if (localPlayer != IntPtr.Zero)
                         {
-                            
+
                             timeWithLP = Memory.TickCount - timeWithoutLP;
 
-                            var myCameraPos = Memory.ReadVector3(processHandle, (IntPtr)(localPlayer.ToInt64() + CameraPosition));
-                            var StaticAngles = Memory.ReadVector3(processHandle, (IntPtr)(localPlayer.ToInt64() + AnglesStatic));
-                            var WritableAngles = Memory.ReadVector3(processHandle, (IntPtr)(localPlayer.ToInt64() + ViewAngles));
-                            var myPos = Memory.ReadVector3(processHandle, (IntPtr)(localPlayer.ToInt64() + Origin));
-                            var myTeam = Memory.ReadInt32(processHandle, (IntPtr)(localPlayer.ToInt64() + Team));
-                            //var myHP = Memory.ReadInt32(processHandle, (IntPtr)(localPlayer.ToInt64() + Health));
-                            var wepHnd = Memory.ReadUInt32(processHandle, (IntPtr)(localPlayer.ToInt64() + m_latestPrimaryWeapons));
+                            var myCameraPos = Memory.ZwReadVector3(processHandle, (IntPtr)(localPlayer.ToInt64() + CameraPosition));
+                            var StaticAngles = Memory.ZwReadVector3(processHandle, (IntPtr)(localPlayer.ToInt64() + AnglesStatic));
+                            var WritableAngles = Memory.ZwReadVector3(processHandle, (IntPtr)(localPlayer.ToInt64() + ViewAngles));
+                            var myPos = Memory.ZwReadVector3(processHandle, (IntPtr)(localPlayer.ToInt64() + Origin));
+                            var myTeam = Memory.ZwReadInt32(processHandle, (IntPtr)(localPlayer.ToInt64() + Team));
+                            //var myHP = Memory.ZwReadInt32(processHandle, (IntPtr)(localPlayer.ToInt64() + Health));
+                            var wepHnd = Memory.ZwReadUInt32(processHandle, (IntPtr)(localPlayer.ToInt64() + m_latestPrimaryWeapons));
                             var weaponIndex = wepHnd & 0xFFFF;
                             var weaponPtr = GetEntityByIndex(processHandle, weaponIndex);
                             float bulletSpeed = 999999999.0f;
                             if (weaponPtr != IntPtr.Zero)
                             {
-                                bulletSpeed = Memory.ReadFloat(processHandle, (IntPtr)(weaponPtr.ToInt64() + BulletSpeed));
+                                bulletSpeed = Memory.ZwReadFloat(processHandle, (IntPtr)(weaponPtr.ToInt64() + BulletSpeed));
                             }
                             for (uint i = 0; i <= 60; i++)
                             {
@@ -538,13 +542,14 @@ namespace ApexLegends
                                 if ((entity != IntPtr.Zero) && (localPlayer != entity))
                                 {
                                     //Console.WriteLine($"{entity.ToString("X")}");
-                                    var entTeam = Memory.ReadInt32(processHandle, (IntPtr)(entity.ToInt64() + Team));
+                                    var entTeam = Memory.ZwReadInt32(processHandle, (IntPtr)(entity.ToInt64() + Team));
                                     if (entTeam == myTeam) continue;
-                                    var entHP = Memory.ReadInt32(processHandle, (IntPtr)(entity.ToInt64() + Health));
-                                    var entHPMAX = Memory.ReadInt32(processHandle, (IntPtr)(entity.ToInt64() + MaxHealth));
+                                    var entHP = Memory.ZwReadInt32(processHandle, (IntPtr)(entity.ToInt64() + Health));
+                                    var entHPMAX = Memory.ZwReadInt32(processHandle, (IntPtr)(entity.ToInt64() + MaxHealth));
                                     if ((entHP > 0) && (entHPMAX > 0))
                                     {
-                                        var entPos = Memory.ReadVector3(processHandle, (IntPtr)(entity.ToInt64() + Origin));
+                                        //Console.WriteLine($"{entHP.ToString()}");
+                                        var entPos = Memory.ZwReadVector3(processHandle, (IntPtr)(entity.ToInt64() + Origin));
                                         var dist = GetDistance3D(myPos, entPos);
                                         if (dist > Components.VisualsComponent.ESPRendDist.Value) continue;
 
@@ -552,11 +557,11 @@ namespace ApexLegends
                                         Vector2 vScreen_head = new Vector2(0, 0);
                                         if (Renderer.WorldToScreen(entPos, out vScreen_feet, matrix, wndMargins, wndSize, W2SType.TypeD3D9))
                                         {
-                                            var entShield = Memory.ReadInt32(processHandle, (IntPtr)(entity.ToInt64() + Shield));
-                                            var entShieldMax = Memory.ReadInt32(processHandle, (IntPtr)(entity.ToInt64() + MaxShield));
-                                            //var bleedOutState = Memory.ReadInt32(processHandle, (IntPtr)(entity.ToInt64() + BleedOutState));
-                                            var boundingBox = Memory.ReadVector3(processHandle, (IntPtr)(entity.ToInt64() + BoundingBox));
-                                            var entVelocity = Memory.ReadVector3(processHandle, (IntPtr)(entity.ToInt64() + Velocity));
+                                            var entShield = Memory.ZwReadInt32(processHandle, (IntPtr)(entity.ToInt64() + Shield));
+                                            var entShieldMax = Memory.ZwReadInt32(processHandle, (IntPtr)(entity.ToInt64() + MaxShield));
+                                            //var bleedOutState = Memory.ZwReadInt32(processHandle, (IntPtr)(entity.ToInt64() + BleedOutState));
+                                            var boundingBox = Memory.ZwReadVector3(processHandle, (IntPtr)(entity.ToInt64() + BoundingBox));
+                                            var entVelocity = Memory.ZwReadVector3(processHandle, (IntPtr)(entity.ToInt64() + Velocity));
                                             var ent_bone = ReadBonePos(entity, 12);//bone for head
                                             var ent_HeadPosBOX = new Vector3(entPos.X + ent_bone.X, entPos.Y + ent_bone.Y, entPos.Z + ent_bone.Z + 2.0f);
                                             Renderer.WorldToScreen(ent_HeadPosBOX, out vScreen_head, matrix, wndMargins, wndSize, W2SType.TypeD3D9);
@@ -618,6 +623,16 @@ namespace ApexLegends
                                     }
                                 }
                             }
+
+
+                            //var PredPosScreen2 = new Vector2(0, 0); 
+                            //var PredictedPos2 = new Vector3(30815.7832f, -6437.667969f, -29080.31836f); //testing aimbot in training room
+                            //if (Renderer.WorldToScreen(PredictedPos2, out PredPosScreen2, matrix, wndMargins, wndSize, W2SType.TypeD3D9))
+                            //{
+                            //    AimTarg2D = PredPosScreen2;
+                            //    AimTarg3D = PredictedPos2;
+                            //}
+
 
                             if (Components.AimbotComponent.AimGlobalBool.Enabled)
                             {
