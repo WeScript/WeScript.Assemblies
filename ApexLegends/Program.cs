@@ -54,11 +54,11 @@ namespace ApexLegends
         public static uint m_latestPrimaryWeapons = 0x1a0c; //int
         public static uint BulletSpeed = 0x1e08; //float 
 
-        public static uint CameraPosition = 0x1e6c; 
-        public static uint CameraAngles = 0x1e6c + 0xC; 
+        public static uint CameraPosition = 0x1e6c;
+        public static uint CameraAngles = 0x1e6c + 0xC;
         //public static uint AimPunch = 0x2300;
-        public static uint AnglesStatic = 0x24A0 - 0x10; 
-        public static uint ViewAngles = 0x24A0; 
+        public static uint AnglesStatic = 0x24A0 - 0x10;
+        public static uint ViewAngles = 0x24A0;
         //public static uint BleedOutState = 0x2590; //0 = alive; 2 = downed
 
 
@@ -159,9 +159,9 @@ namespace ApexLegends
             InitializeMenu();
             Renderer.OnRenderer += OnRenderer;
             Memory.OnTick += OnTick;
-
-            DelayAction.Queue(() => LoadSpoofer(),1000); //firstly spoof hwid
-			//some chill delay of 1000ms first :)
+            Overlay.RemoveTopMostFlag(true);
+            DelayAction.Queue(() => LoadSpoofer(), 1000); //firstly spoof hwid
+                                                          //some chill delay of 1000ms first :)
             DelayAction.Queue(() => LoadDriver(), 2000); //second load RPM driver
         }
 
@@ -344,19 +344,19 @@ namespace ApexLegends
                             //Console.WriteLine($"GameSize: {GameSize.ToString("X")}"); //easy way to check if we got reading rights
                             if (EntityListPtr == IntPtr.Zero)
                             {
-                                EntityListPtr = EntityListPtr = Memory.ZwFindSignature(processHandle, GameBase, GameSize, "0F B7 C8 48 8D 05 ? ? ? ? 48 C1 E1 05 48 03 C8", 0x6); 
+                                EntityListPtr = EntityListPtr = Memory.ZwFindSignature(processHandle, GameBase, GameSize, "0F B7 C8 48 8D 05 ? ? ? ? 48 C1 E1 05 48 03 C8", 0x6);
                             }
                             if (LocalPlayerPtr == IntPtr.Zero)
                             {
-                                LocalPlayerPtr = LocalPlayerPtr = Memory.ZwFindSignature(processHandle, GameBase, GameSize, "48 8B 05 ? ? ? ? 48 0F 44 C7 48 89 05", 0x3); 
+                                LocalPlayerPtr = LocalPlayerPtr = Memory.ZwFindSignature(processHandle, GameBase, GameSize, "48 8B 05 ? ? ? ? 48 0F 44 C7 48 89 05", 0x3);
                             }
                             if (ViewRenderPtr == IntPtr.Zero)
                             {
-                                ViewRenderPtr = ViewRenderPtr = Memory.ZwFindSignature(processHandle, GameBase, GameSize, "48 8B 0D ? ? ? ? 44 0F 28 C2", 0x3); 
+                                ViewRenderPtr = ViewRenderPtr = Memory.ZwFindSignature(processHandle, GameBase, GameSize, "48 8B 0D ? ? ? ? 44 0F 28 C2", 0x3);
                             }
                             if (ViewMatrixOffs == IntPtr.Zero)
                             {
-                                ViewMatrixOffs = Memory.ZwFindSignature(processHandle, GameBase, GameSize, "48 89 AB ? ? ? ? 4C 89 9B", 0x3, true); 
+                                ViewMatrixOffs = Memory.ZwFindSignature(processHandle, GameBase, GameSize, "48 89 AB ? ? ? ? 4C 89 9B", 0x3, true);
                             }
 
                             //Console.WriteLine($"EntityListPtr: {EntityListPtr.ToString("X")}");
@@ -520,8 +520,8 @@ namespace ApexLegends
                             //var PredictedPos2 = new Vector3(30815.7832f, -6437.667969f, -29080.31836f); //testing aimbot in training room - point close to snipers
                             //if (Renderer.WorldToScreen(PredictedPos2, out PredPosScreen2, matrix, wndMargins, wndSize, W2SType.TypeD3D9))
                             //{
-                                //AimTarg2D = PredPosScreen2;
-                                //AimTarg3D = PredictedPos2;
+                            //AimTarg2D = PredPosScreen2;
+                            //AimTarg3D = PredictedPos2;
                             //}
 
 
@@ -542,7 +542,7 @@ namespace ApexLegends
                                     {
                                         int forceto1 = 1;
                                         //switch (Components.AimbotComponent.AimType.Value)
-                                        switch(forceto1)
+                                        switch (forceto1)
                                         {
                                             case 0: //engine viewangles
                                                 {
