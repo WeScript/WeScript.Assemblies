@@ -88,7 +88,7 @@ namespace ApexLegends
             {
                 public static readonly MenuBool AimGlobalBool = new MenuBool("enableaim", "Enable Aimbot Features", true);
                 public static readonly MenuKeyBind AimKey = new MenuKeyBind("aimkey", "Aimbot HotKey (HOLD)", VirtualKeyCode.CapsLock, KeybindType.Hold, false);
-                //public static readonly MenuList AimType = new MenuList("aimtype", "Aimbot Type", new List<string>() { "Direct Engine ViewAngles", "Real Mouse Movement" }, 0);
+                public static readonly MenuList AimType = new MenuList("aimtype", "Aimbot Type", new List<string>() { "Direct Engine ViewAngles", "Real Mouse Movement" }, 0);
                 public static readonly MenuList AimSpot = new MenuList("aimspot", "Aimbot Spot", new List<string>() { "Aim at their Head", "Aim at their Body" }, 0);
                 public static readonly MenuSlider AimSpeed = new MenuSlider("aimspeed", "Aimbot Speed %", 12, 1, 100);
                 public static readonly MenuBool DrawAimSpot = new MenuBool("drawaimspot", "Draw Aimbot Spot", true);
@@ -118,7 +118,7 @@ namespace ApexLegends
             {
                 Components.AimbotComponent.AimGlobalBool,
                 Components.AimbotComponent.AimKey,
-                //Components.AimbotComponent.AimType,
+                Components.AimbotComponent.AimType,
                 Components.AimbotComponent.AimSpot,
                 Components.AimbotComponent.AimSpeed,
                 Components.AimbotComponent.DrawAimSpot,
@@ -159,7 +159,7 @@ namespace ApexLegends
             InitializeMenu();
             Renderer.OnRenderer += OnRenderer;
             Memory.OnTick += OnTick;
-            Overlay.RemoveTopMostFlag(true); //to stay UD on EAC + Apex
+            //Overlay.RemoveTopMostFlag(true); //to stay UD on EAC + Apex
             Memory.TerminateProcess("WeScript.Loader.exe"); //close the loader because it's detected from EAC
             DelayAction.Queue(() => LoadSpoofer(), 1000); //firstly spoof hwid
             //some chill delay of 1000ms first :)
@@ -541,9 +541,9 @@ namespace ApexLegends
                                     }
                                     if (Components.AimbotComponent.AimKey.Enabled)
                                     {
-                                        int forceto1 = 1;
-                                        //switch (Components.AimbotComponent.AimType.Value)
-                                        switch (forceto1)
+                                        //int forceto1 = 1;
+                                        switch (Components.AimbotComponent.AimType.Value)
+                                        //switch (forceto1)
                                         {
                                             case 0: //engine viewangles
                                                 {
@@ -574,7 +574,7 @@ namespace ApexLegends
                                                         }
                                                         newAng = ClampAngle(newAng); //just in case?
                                                     }
-                                                    Memory.WriteVector3(processHandle, (IntPtr)(localPlayer.ToInt64() + ViewAngles), newAng); //rip ring0 version (for now)
+                                                    Memory.ZwWriteVector3(processHandle, (IntPtr)(localPlayer.ToInt64() + ViewAngles), newAng);
                                                 }
                                                 break;
                                             case 1: //mouse event
