@@ -159,7 +159,7 @@ namespace ApexLegends
             InitializeMenu();
             Renderer.OnRenderer += OnRenderer;
             Memory.OnTick += OnTick;
-            //Overlay.RemoveTopMostFlag(true); //to stay UD on EAC + Apex
+            Overlay.RemoveTopMostFlag(true); //to stay UD on EAC + Apex
             Memory.TerminateProcess("WeScript.Loader.exe"); //close the loader because it's detected from EAC
             DelayAction.Queue(() => LoadSpoofer(), 1000); //firstly spoof hwid
             //some chill delay of 1000ms first :)
