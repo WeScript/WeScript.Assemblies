@@ -74,7 +74,7 @@ namespace ApexLegends
             public static class VisualsComponent
             {
                 public static readonly MenuBool DrawTheVisuals = new MenuBool("drawthevisuals", "Enable all of the Visuals", true);
-                public static readonly MenuSlider ESPRendDist = new MenuSlider("menurenddist", "ESP Render Distance", 240, 20, 500);
+                public static readonly MenuSlider ESPRendDist = new MenuSlider("menurenddist", "ESP Render Distance", 300, 20, 500);
                 public static readonly MenuColor EnemiesColor = new MenuColor("enemycolor", "Enemies ESP Color", new SharpDX.Color(255, 0, 0));
                 public static readonly MenuBool DrawBox = new MenuBool("drawbox", "Draw Box ESP", true);
                 public static readonly MenuSlider DrawBoxThic = new MenuSlider("boxthickness", "Draw Box Thickness", 0, 0, 10);
@@ -90,13 +90,13 @@ namespace ApexLegends
                 public static readonly MenuKeyBind AimKey = new MenuKeyBind("aimkey", "Aimbot HotKey (HOLD)", VirtualKeyCode.CapsLock, KeybindType.Hold, false);
                 public static readonly MenuList AimType = new MenuList("aimtype", "Aimbot Type", new List<string>() { "Direct Engine ViewAngles", "Real Mouse Movement" }, 0);
                 public static readonly MenuList AimSpot = new MenuList("aimspot", "Aimbot Spot", new List<string>() { "Aim at their Head", "Aim at their Body" }, 0);
-                public static readonly MenuSlider AimSpeed = new MenuSlider("aimspeed", "Aimbot Speed %", 12, 1, 100);
+                public static readonly MenuSlider AimSpeed = new MenuSlider("aimspeed", "Aimbot Speed %", 100, 1, 100);
                 public static readonly MenuBool DrawAimSpot = new MenuBool("drawaimspot", "Draw Aimbot Spot", true);
                 public static readonly MenuBool DrawAimTarget = new MenuBool("drawaimtarget", "Draw Aimbot Current Target", true);
                 public static readonly MenuColor AimTargetColor = new MenuColor("aimtargetcolor", "Target Color", new SharpDX.Color(0x1F, 0xBE, 0xD6, 255));
                 public static readonly MenuBool DrawAimFov = new MenuBool("drawaimfov", "Draw Aimbot FOV Circle", true);
                 public static readonly MenuColor AimFovColor = new MenuColor("aimfovcolor", "FOV Color", new SharpDX.Color(255, 255, 255, 60));
-                public static readonly MenuSlider AimFov = new MenuSlider("aimfov", "Aimbot FOV", 100, 4, 1000);
+                public static readonly MenuSlider AimFov = new MenuSlider("aimfov", "Aimbot FOV", 300, 4, 1000);
             }
         }
 
