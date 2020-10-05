@@ -83,14 +83,18 @@ namespace ApexLegends
                 public static readonly MenuBool DrawBoxAR = new MenuBool("drawboxar", "Draw Armor", true);
                 public static readonly MenuSliderBool DrawTextSize = new MenuSliderBool("drawtextsize", "Text Size", false, 14, 4, 72);
                 public static readonly MenuBool DrawTextDist = new MenuBool("drawtextdist", "Draw Distance", true);
+                public static readonly MenuKeyBind GlowToggle = new MenuKeyBind("glowtoggle", "Glow Toggle Key", VirtualKeyCode.F4, KeybindType.Toggle, true);
             }
             public static class AimbotComponent
             {
                 public static readonly MenuBool AimGlobalBool = new MenuBool("enableaim", "Enable Aimbot Features", true);
                 public static readonly MenuKeyBind AimKey = new MenuKeyBind("aimkey", "Aimbot HotKey (HOLD)", VirtualKeyCode.CapsLock, KeybindType.Hold, false);
+                public static readonly MenuKeyBind AimKeyTwo = new MenuKeyBind("aimkeytwo", "Aimbot HotKey2 (HOLD)", VirtualKeyCode.LeftMenu, KeybindType.Hold, false);
                 public static readonly MenuList AimType = new MenuList("aimtype", "Aimbot Type", new List<string>() { "Direct Engine ViewAngles", "Real Mouse Movement" }, 0);
-                public static readonly MenuList AimSpot = new MenuList("aimspot", "Aimbot Spot", new List<string>() { "Aim at their Head", "Aim at their Body" }, 0);
-                public static readonly MenuSlider AimSpeed = new MenuSlider("aimspeed", "Aimbot Speed %", 100, 1, 100);
+                //public static readonly MenuList AimSpot = new MenuList("aimspot", "Aimbot Spot", new List<string>() { "Aim at their Head", "Aim at their Body" }, 0);
+                public static readonly MenuKeyBind AimSpotToggle = new MenuKeyBind("aimspottoggle", "Aim Spot Toggle", VirtualKeyCode.F2, KeybindType.Toggle, true);
+                //public static readonly MenuSlider AimSpeed = new MenuSlider("aimspeed", "Aimbot Speed %", 100, 1, 100);
+                public static readonly MenuKeyBind AimSpeedToggle = new MenuKeyBind("aimspeedtoggle", "AimSpeed Toggle", VirtualKeyCode.F3, KeybindType.Toggle, true);
                 public static readonly MenuBool DrawAimSpot = new MenuBool("drawaimspot", "Draw Aimbot Spot", true);
                 public static readonly MenuBool DrawAimTarget = new MenuBool("drawaimtarget", "Draw Aimbot Current Target", true);
                 public static readonly MenuColor AimTargetColor = new MenuColor("aimtargetcolor", "Target Color", new SharpDX.Color(0x1F, 0xBE, 0xD6, 255));
@@ -112,15 +116,17 @@ namespace ApexLegends
                 Components.VisualsComponent.DrawBoxHP,
                 Components.VisualsComponent.DrawTextSize,
                 Components.VisualsComponent.DrawTextDist,
+                Components.VisualsComponent.GlowToggle,
             };
 
             AimbotMenu = new Menu("aimbotmenu", "Aimbot Menu")
             {
                 Components.AimbotComponent.AimGlobalBool,
                 Components.AimbotComponent.AimKey,
+                Components.AimbotComponent.AimKeyTwo,
                 Components.AimbotComponent.AimType,
-                Components.AimbotComponent.AimSpot,
-                Components.AimbotComponent.AimSpeed,
+                Components.AimbotComponent.AimSpotToggle,
+                Components.AimbotComponent.AimSpeedToggle,
                 Components.AimbotComponent.DrawAimSpot,
                 Components.AimbotComponent.DrawAimTarget,
                 Components.AimbotComponent.DrawAimFov,
@@ -156,6 +162,7 @@ namespace ApexLegends
         static void Main(string[] args)
         {
             Console.WriteLine("WeScript.app ApexLegends Experimental Aimbot+Glow+HWIDSpoofer!");
+            Console.WriteLine("==== Use; [F2] toggle AimSpot, [F3] toggle AimSpeed, [F4] toggle Glow!");
             InitializeMenu();
             Renderer.OnRenderer += OnRenderer;
             Memory.OnTick += OnTick;
@@ -425,23 +432,27 @@ namespace ApexLegends
                                                         if (Renderer.WorldToScreen(entPos, out vScreen_feet, matrix, wndMargins, wndSize, W2SType.TypeD3D9))
                                                         {
 
-                                                            //experimental glow here
-                                                            Memory.ZwWriteBool(processHandle, (IntPtr)(entity.ToInt64() + 0x3C0), true); //glow enable
-                                                            Memory.ZwWriteBool(processHandle, (IntPtr)(entity.ToInt64() + 0x330), true); //glow context
-                                                            Memory.ZwWriteBool(processHandle, (IntPtr)(entity.ToInt64() + 0x331), false);
-                                                            Memory.ZwWriteBool(processHandle, (IntPtr)(entity.ToInt64() + 0x332), false);
-                                                            Memory.ZwWriteBool(processHandle, (IntPtr)(entity.ToInt64() + 0x333), false);
-
-                                                            Memory.ZwWriteFloat(processHandle, (IntPtr)entity.ToInt64() + 0x1D0, 16.0f); // color R.starting at offset then do +4
-                                                            Memory.ZwWriteFloat(processHandle, (IntPtr)entity.ToInt64() + 0x1D4, 0.0f);
-                                                            Memory.ZwWriteFloat(processHandle, (IntPtr)entity.ToInt64() + 0x1D8, 0.0f);
-
-                                                            for (int offset = 0x2D0; offset <= 0x2E8; offset += 0x4) //Setting the of the Glow at all necessary spots
+                                                            if (Components.VisualsComponent.GlowToggle.Enabled)
                                                             {
-                                                                Memory.ZwWriteFloat(processHandle, (IntPtr)entity.ToInt64() + offset, 10000000.0f);
-                                                            }
+                                                                //experimental glow here
+                                                                Memory.ZwWriteBool(processHandle, (IntPtr)(entity.ToInt64() + 0x3C0), true); //glow enable
+                                                                Memory.ZwWriteBool(processHandle, (IntPtr)(entity.ToInt64() + 0x330), true); //glow context
+                                                                Memory.ZwWriteBool(processHandle, (IntPtr)(entity.ToInt64() + 0x331), false);
+                                                                Memory.ZwWriteBool(processHandle, (IntPtr)(entity.ToInt64() + 0x332), false);
+                                                                Memory.ZwWriteBool(processHandle, (IntPtr)(entity.ToInt64() + 0x333), false);
 
-                                                            Memory.ZwWriteFloat(processHandle, (IntPtr)entity.ToInt64() + 0x2FC, 10000000.0f);
+                                                                Memory.ZwWriteFloat(processHandle, (IntPtr)entity.ToInt64() + 0x1D0, 16.0f); // color R.starting at offset then do +4
+                                                                Memory.ZwWriteFloat(processHandle, (IntPtr)entity.ToInt64() + 0x1D4, 0.0f);
+                                                                Memory.ZwWriteFloat(processHandle, (IntPtr)entity.ToInt64() + 0x1D8, 0.0f);
+
+                                                                for (int offset = 0x2D0; offset <= 0x2E8; offset += 0x4) //Setting the of the Glow at all necessary spots
+                                                                {
+                                                                    Memory.ZwWriteFloat(processHandle, (IntPtr)entity.ToInt64() + offset, 10000000.0f);
+                                                                }
+
+                                                                Memory.ZwWriteFloat(processHandle, (IntPtr)entity.ToInt64() + 0x2FC, 10000000.0f);
+                                                            }
+                                                            
 
 
                                                             var entShield = Memory.ZwReadInt32(processHandle, (IntPtr)(entity.ToInt64() + Shield));
@@ -466,15 +477,15 @@ namespace ApexLegends
                                                             if (Components.AimbotComponent.AimGlobalBool.Enabled)
                                                             {
                                                                 Vector3 targetVec = new Vector3(0, 0, 0);
-                                                                switch (Components.AimbotComponent.AimSpot.Value)
+                                                                switch (Components.AimbotComponent.AimSpotToggle.Enabled)
                                                                 {
-                                                                    case 0: //head
+                                                                    case true: //head
                                                                         {
                                                                             var tmp = ReadBonePos(entity, 12);
                                                                             targetVec = new Vector3(entPos.X + tmp.X, entPos.Y + tmp.Y, entPos.Z + tmp.Z);
                                                                         }
                                                                         break;
-                                                                    case 1: //body
+                                                                    case false: //body
                                                                         {
                                                                             var tmp = ReadBonePos(entity, 5);
                                                                             targetVec = new Vector3(entPos.X + tmp.X, entPos.Y + tmp.Y, entPos.Z + tmp.Z);
@@ -534,7 +545,7 @@ namespace ApexLegends
                                                     //{
                                                     //    Renderer.DrawRect(AimTarg2D.X - 3, AimTarg2D.Y - 3, 6, 6, Components.AimbotComponent.AimTargetColor.Color);
                                                     //}
-                                                    if (Components.AimbotComponent.AimKey.Enabled)
+                                                    if ((Components.AimbotComponent.AimKey.Enabled) || (Components.AimbotComponent.AimKeyTwo.Enabled))
                                                     {
                                                         //int forceto1 = 1;
                                                         switch (Components.AimbotComponent.AimType.Value)
@@ -545,9 +556,10 @@ namespace ApexLegends
                                                                     var Breath = new Vector3(0, 0, 0);
                                                                     Breath = StaticAngles - WritableAngles;
                                                                     var newAng = CalcAngle(myCameraPos, AimTarg3D, Breath, 1.0f, 1.0f);
-                                                                    if (Components.AimbotComponent.AimSpeed.Value < 100) //smoothing only below 100%
+                                                                    int AimSpeedValue = Components.AimbotComponent.AimSpeedToggle.Enabled ? 100 : 15;
+                                                                    if (AimSpeedValue < 100) //smoothing only below 100%
                                                                     {
-                                                                        float aimsmooth_ = Components.AimbotComponent.AimSpeed.Value * 0.01f;
+                                                                        float aimsmooth_ = AimSpeedValue * 0.01f;
                                                                         var diff = newAng - WritableAngles;
                                                                         diff = NormalizeAngle(diff);
                                                                         diff = ClampAngle(diff);
@@ -579,8 +591,9 @@ namespace ApexLegends
                                                                     double DistY = 0;
                                                                     DistX = (AimTarg2D.X) - GameCenterPos.X;
                                                                     DistY = (AimTarg2D.Y) - GameCenterPos.Y;
-                                                                    double slowDistX = DistX / (1.0f + (Math.Abs(DistX) / (1.0f + Components.AimbotComponent.AimSpeed.Value)));
-                                                                    double slowDistY = DistY / (1.0f + (Math.Abs(DistY) / (1.0f + Components.AimbotComponent.AimSpeed.Value)));
+                                                                    int AimSpeedValue = Components.AimbotComponent.AimSpeedToggle.Enabled ? 100 : 15;
+                                                                    double slowDistX = DistX / (1.0f + (Math.Abs(DistX) / (1.0f + AimSpeedValue)));
+                                                                    double slowDistY = DistY / (1.0f + (Math.Abs(DistY) / (1.0f + AimSpeedValue)));
                                                                     Input.mouse_eventWS(MouseEventFlags.MOVE, (int)slowDistX, (int)slowDistY, MouseEventDataXButtons.NONE, IntPtr.Zero);
                                                                 }
                                                                 break;
