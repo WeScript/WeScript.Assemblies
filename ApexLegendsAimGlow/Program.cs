@@ -52,7 +52,7 @@ namespace ApexLegends
         public static uint BoneClass = 0xF18; //ptr 
 
         public static uint m_latestPrimaryWeapons = 0x1a0c; //int
-        public static uint BulletSpeed = 0x1e08; //float 
+        public static uint BulletSpeed = 0x1e0c; //float 
 
         public static uint CameraPosition = 0x1e6c;
         public static uint CameraAngles = 0x1e6c + 0xC;
@@ -407,7 +407,7 @@ namespace ApexLegends
                                             if (weaponPtr != IntPtr.Zero)
                                             {
                                                 var actualSpd = Memory.ZwReadFloat(processHandle, (IntPtr)(weaponPtr.ToInt64() + BulletSpeed));
-                                                if (actualSpd > 0.1f) bulletSpeed = actualSpd;
+                                                if (actualSpd > 1.1f) bulletSpeed = actualSpd;
                                             }
                                             for (uint i = 0; i <= 60; i++)
                                             {
@@ -435,17 +435,17 @@ namespace ApexLegends
                                                             if (Components.VisualsComponent.GlowToggle.Enabled)
                                                             {
                                                                 //experimental glow here
-                                                                Memory.ZwWriteBool(processHandle, (IntPtr)(entity.ToInt64() + 0x3C0), true); //glow enable
-                                                                Memory.ZwWriteBool(processHandle, (IntPtr)(entity.ToInt64() + 0x330), true); //glow context
-                                                                Memory.ZwWriteBool(processHandle, (IntPtr)(entity.ToInt64() + 0x331), false);
-                                                                Memory.ZwWriteBool(processHandle, (IntPtr)(entity.ToInt64() + 0x332), false);
-                                                                Memory.ZwWriteBool(processHandle, (IntPtr)(entity.ToInt64() + 0x333), false);
+                                                                Memory.ZwWriteBool(processHandle, (IntPtr)(entity.ToInt64() + 0x3B0), true); //glow enable
+                                                                Memory.ZwWriteBool(processHandle, (IntPtr)(entity.ToInt64() + 0x350), true); //glow context
+                                                                Memory.ZwWriteBool(processHandle, (IntPtr)(entity.ToInt64() + 0x351), false);
+                                                                Memory.ZwWriteBool(processHandle, (IntPtr)(entity.ToInt64() + 0x352), false);
+                                                                Memory.ZwWriteBool(processHandle, (IntPtr)(entity.ToInt64() + 0x353), false);
 
                                                                 Memory.ZwWriteFloat(processHandle, (IntPtr)entity.ToInt64() + 0x1D0, 16.0f); // color R.starting at offset then do +4
                                                                 Memory.ZwWriteFloat(processHandle, (IntPtr)entity.ToInt64() + 0x1D4, 0.0f);
                                                                 Memory.ZwWriteFloat(processHandle, (IntPtr)entity.ToInt64() + 0x1D8, 0.0f);
 
-                                                                for (int offset = 0x2D0; offset <= 0x2E8; offset += 0x4) //Setting the of the Glow at all necessary spots
+                                                                for (int offset = 0x310; offset <= 0x33C; offset += 0x4) //Setting the of the Glow at all necessary spots
                                                                 {
                                                                     Memory.ZwWriteFloat(processHandle, (IntPtr)entity.ToInt64() + offset, 10000000.0f);
                                                                 }
