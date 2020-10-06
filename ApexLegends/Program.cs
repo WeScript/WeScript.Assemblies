@@ -52,7 +52,7 @@ namespace ApexLegends
         public static uint BoneClass = 0xF18; //ptr 
 
         public static uint m_latestPrimaryWeapons = 0x1a0c; //int
-        public static uint BulletSpeed = 0x1e08; //float 
+        public static uint BulletSpeed = 0x1e0c; //float 
 
         public static uint CameraPosition = 0x1e6c;
         public static uint CameraAngles = 0x1e6c + 0xC;
@@ -425,7 +425,7 @@ namespace ApexLegends
                             if (weaponPtr != IntPtr.Zero)
                             {
                                 var actualSpd = Memory.ZwReadFloat(processHandle, (IntPtr)(weaponPtr.ToInt64() + BulletSpeed));
-                                if (actualSpd > 0.1f) bulletSpeed = actualSpd;
+                                if (actualSpd > 1.1f) bulletSpeed = actualSpd;
                             }
                             for (uint i = 0; i <= 60; i++)
                             {
