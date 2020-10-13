@@ -95,7 +95,7 @@ namespace FallGuysCheeto
 
         static void Main(string[] args)
         {
-            Console.WriteLine("FallGuys Cheeto 2.0 assembly loaded! (Now with EAC Bypass!)");
+            Console.WriteLine("FallGuys Cheeto for season 2 loaded! (13.10.2020)");
             InitializeMenu();
             if (!Memory.InitDriver(DriverName.frost_64))
             {
@@ -109,12 +109,12 @@ namespace FallGuysCheeto
             if (Components.keepFlying.Enabled)
             {
                 Memory.ZwWriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() + 0x18), (Components.normalMaxSpeed.Value * 0.1f));
-                Memory.ZwWriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() + 0xB8), (Components.gravityScale.Value * 0.1f));
+                Memory.ZwWriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() + 0xC0), (Components.gravityScale.Value * 0.1f));
             }
             else
             {
                 Memory.ZwWriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() + 0x18), 9.5f);
-                Memory.ZwWriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() + 0xB8), 1.5f);
+                Memory.ZwWriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() + 0xC0), 1.5f);
                 if (Components.keepSpeeding.Enabled)
                 {
                     Memory.ZwWriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() + 0x18), (Components.normalMaxSpeed.Value * 0.1f));
@@ -124,7 +124,7 @@ namespace FallGuysCheeto
                     Memory.ZwWriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() + 0x18), 9.5f);
                 }
             }
-            
+
             //Memory.ZwWriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() + 0x18), reset ? 9.5f : (Components.normalMaxSpeed.Value * 0.1f));
             //Memory.ZwWriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() + 0x1C), reset ? 9.5f : (Components.getUpMaxSpeed.Value * 0.1f));
             //Memory.ZwWriteFloat(processHandle, (IntPtr)(characterPtr.ToInt64() + 0x20), reset ? 7.0f : (Components.rollingMaxSpeed.Value * 0.1f));
@@ -216,13 +216,14 @@ namespace FallGuysCheeto
                     if (GameAssembly_dll == IntPtr.Zero)
                     {
                         GameAssembly_dll = Memory.ZwGetModule(processHandle, "GameAssembly.dll", isWow64Process);
+                        Console.WriteLine($"Found GameAssembly.dll: {GameAssembly_dll.ToString("X")}");
                     }
                     //since we're not drawing, the rest of the code can be put here.
                     if (characterPtr == IntPtr.Zero)
                     {
                         //characterPtr = Memory.ZwFindSignatureBase(processHandle, IntPtr.Zero, IntPtr.Zero, "00 00 18 41 00 00 18 41 00 00 E0 40 CD CC 4C 3E 00 00 A0 40 00 00 E0 40 00 00 00 41 00 00 00 41 00"); //just to get the base of the character allocation data
                         //9.50 9.50 7.00 0.20 5.00 7.00 8.00 or ... 41180000 41180000 40E00000 3E4CCCCD 40A00000 40E00000 41000000
-                        characterPtr = SDKUtil.ZwReadPointerChain(processHandle, (IntPtr)(GameAssembly_dll.ToInt64() + 0x02BB63F0), isWow64Process, 0xB58, 0x88);
+                        characterPtr = SDKUtil.ZwReadPointerChain(processHandle, (IntPtr)(GameAssembly_dll.ToInt64() + 0x028F1F40), isWow64Process, 0xB58, 0x88);
                         if (characterPtr != IntPtr.Zero)
                         {
                             Console.WriteLine($"FOUND Character Base Ptr: {characterPtr.ToString("X")}");
@@ -240,7 +241,7 @@ namespace FallGuysCheeto
                     {
                         //we are in game and got char ptr ... continue with menu modifications every tick
 
-                        IntPtr timeToRunNextCharacterControllerDataCheckPTR = SDKUtil.ZwReadPointerChain(processHandle, (IntPtr)(GameAssembly_dll.ToInt64() + 0x02BD25B8), isWow64Process, 0x460, 0x20, 0x1D0);
+                        IntPtr timeToRunNextCharacterControllerDataCheckPTR = SDKUtil.ZwReadPointerChain(processHandle, (IntPtr)(GameAssembly_dll.ToInt64() + 0x2C2AD28), isWow64Process, 0xB8, 0x0, 0xC8, 0x10, 0x30, 0x1D8);
                         //Console.WriteLine(timeToRunNextCharacterControllerDataCheck.ToString("X"));
                         if (timeToRunNextCharacterControllerDataCheckPTR != IntPtr.Zero)
                         {
