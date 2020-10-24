@@ -12,7 +12,6 @@ using WeScript.SDK.UI;
 using WeScript.SDK.UI.Components;
 using WeScript.SDK.Utils;
 
-//full credits to Apin for his Cheat Table https://pastebin.com/VFdECgCE
 
 namespace FallGuysCheeto
 {
@@ -26,7 +25,10 @@ namespace FallGuysCheeto
         public static bool isOverlayOnTop = false; //we might allow drawing visuals, while the user is working with the "menu"
         public static uint PROCESS_ALL_ACCESS = 0x1FFFFF; //hardcoded access right to OpenProcess
         public static IntPtr GameAssembly_dll = IntPtr.Zero;
+        public static IntPtr GameAssembly_dll_size = IntPtr.Zero;
         public static IntPtr characterPtr = IntPtr.Zero;
+        public static IntPtr characterBasePtr = IntPtr.Zero;
+        public static IntPtr clientPtr = IntPtr.Zero;
         public static ulong lastTime = 0;
 
 
@@ -95,7 +97,7 @@ namespace FallGuysCheeto
 
         static void Main(string[] args)
         {
-            Console.WriteLine("FallGuys Cheeto for season 2 loaded! (13.10.2020)");
+            Console.WriteLine("FallGuys Cheeto for season 2 loaded! (24.10.2020) - with semi-autoupdating.");
             InitializeMenu();
             if (!Memory.InitDriver(DriverName.frost_64))
             {
@@ -216,64 +218,83 @@ namespace FallGuysCheeto
                     if (GameAssembly_dll == IntPtr.Zero)
                     {
                         GameAssembly_dll = Memory.ZwGetModule(processHandle, "GameAssembly.dll", isWow64Process);
+                        GameAssembly_dll_size = Memory.ZwGetModuleSize(processHandle, "GameAssembly.dll", isWow64Process);
                         Console.WriteLine($"Found GameAssembly.dll: {GameAssembly_dll.ToString("X")}");
                     }
                     //since we're not drawing, the rest of the code can be put here.
-                    if (characterPtr == IntPtr.Zero)
+                    if (clientPtr == IntPtr.Zero)
                     {
-                        //characterPtr = Memory.ZwFindSignatureBase(processHandle, IntPtr.Zero, IntPtr.Zero, "00 00 18 41 00 00 18 41 00 00 E0 40 CD CC 4C 3E 00 00 A0 40 00 00 E0 40 00 00 00 41 00 00 00 41 00"); //just to get the base of the character allocation data
-                        //9.50 9.50 7.00 0.20 5.00 7.00 8.00 or ... 41180000 41180000 40E00000 3E4CCCCD 40A00000 40E00000 41000000
-                        characterPtr = SDKUtil.ZwReadPointerChain(processHandle, (IntPtr)(GameAssembly_dll.ToInt64() + 0x028F1F40), isWow64Process, 0xB58, 0x88);
-                        if (characterPtr != IntPtr.Zero)
-                        {
-                            Console.WriteLine($"FOUND Character Base Ptr: {characterPtr.ToString("X")}");
-                        }
-                        else
-                        {
-                            if (lastTime + 1000 < Memory.TickCount)
-                            {
-                                lastTime = Memory.TickCount;
-                                Console.WriteLine("FAILED TO FIND Character Base Ptr :(");
-                            }
-                        }
+                        clientPtr = Memory.ZwFindSignature(processHandle, GameAssembly_dll, GameAssembly_dll_size, "45 33 C9 45 33 C0 33 D2 41 0F B6 CE", 0x14);
+                        Console.WriteLine($"Found clientPtr: {clientPtr.ToString("X")}");
                     }
                     else
                     {
-                        //we are in game and got char ptr ... continue with menu modifications every tick
-
-                        IntPtr timeToRunNextCharacterControllerDataCheckPTR = SDKUtil.ZwReadPointerChain(processHandle, (IntPtr)(GameAssembly_dll.ToInt64() + 0x2C2AD28), isWow64Process, 0xB8, 0x0, 0xC8, 0x10, 0x30, 0x1D8);
-                        //Console.WriteLine(timeToRunNextCharacterControllerDataCheck.ToString("X"));
-                        if (timeToRunNextCharacterControllerDataCheckPTR != IntPtr.Zero)
+                        if (characterBasePtr == IntPtr.Zero)
                         {
-                            var timeToRunNextCharacterControllerDataCheck = Memory.ZwReadFloat(processHandle, (IntPtr)timeToRunNextCharacterControllerDataCheckPTR.ToInt64() + 0x10);
-                            if ((timeToRunNextCharacterControllerDataCheck > 0) && (timeToRunNextCharacterControllerDataCheck < 100000000.0f))
-                            {
-                                Memory.ZwWriteFloat(processHandle, (IntPtr)(timeToRunNextCharacterControllerDataCheckPTR.ToInt64() + 0x10), 100000000.0f);
-                            }
-                            else
-                            {
-                                var doublecheck = Memory.ZwReadFloat(processHandle, (IntPtr)timeToRunNextCharacterControllerDataCheckPTR.ToInt64() + 0x10);
-                                if (doublecheck == 100000000.0f)
-                                {
-                                    //DelayAction.Queue(() => writeCheatosz(processHandle, characterPtr), 5000.0f);
-                                    writeCheatos(processHandle, characterPtr, false);
-                                }
-                            }
+                            characterBasePtr = Memory.ZwFindSignature(processHandle, GameAssembly_dll, GameAssembly_dll_size, "33 C0 48 8B 5C 24 40 48 83 C4 20 5D C3 48 8D", 0x10);
+                            Console.WriteLine($"Found characterBasePtr: {characterBasePtr.ToString("X")}");
                         }
                         else
                         {
-                            //writeCheatos(processHandle, characterPtr, true);
+                            if (characterPtr == IntPtr.Zero)
+                            {
+                                //characterPtr = Memory.ZwFindSignatureBase(processHandle, IntPtr.Zero, IntPtr.Zero, "00 00 18 41 00 00 18 41 00 00 E0 40 CD CC 4C 3E 00 00 A0 40 00 00 E0 40 00 00 00 41 00 00 00 41 00"); //just to get the base of the character allocation data
+                                //9.50 9.50 7.00 0.20 5.00 7.00 8.00 or ... 41180000 41180000 40E00000 3E4CCCCD 40A00000 40E00000 41000000
+                                characterPtr = SDKUtil.ZwReadPointerChain(processHandle, (IntPtr)(characterBasePtr.ToInt64() + 8), isWow64Process, 0xB58, 0x88);
+                                if (characterPtr != IntPtr.Zero)
+                                {
+                                    Console.WriteLine($"FOUND Character Base Ptr: {characterPtr.ToString("X")}");
+                                }
+                                else
+                                {
+                                    if (lastTime + 1000 < Memory.TickCount)
+                                    {
+                                        lastTime = Memory.TickCount;
+                                        Console.WriteLine("FAILED TO FIND Character Base Ptr :(");
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                //we are in game and got char ptr ... continue with menu modifications every tick
+
+                                IntPtr timeToRunNextCharacterControllerDataCheckPTR = SDKUtil.ZwReadPointerChain(processHandle, clientPtr, isWow64Process, 0xB8, 0x0, 0xC8, 0x10, 0x30, 0x1D8);
+                                //Console.WriteLine(timeToRunNextCharacterControllerDataCheck.ToString("X"));
+                                if (timeToRunNextCharacterControllerDataCheckPTR != IntPtr.Zero)
+                                {
+                                    var timeToRunNextCharacterControllerDataCheck = Memory.ZwReadFloat(processHandle, (IntPtr)timeToRunNextCharacterControllerDataCheckPTR.ToInt64() + 0x10);
+                                    if ((timeToRunNextCharacterControllerDataCheck > 0) && (timeToRunNextCharacterControllerDataCheck < 100000000.0f))
+                                    {
+                                        Memory.ZwWriteFloat(processHandle, (IntPtr)(timeToRunNextCharacterControllerDataCheckPTR.ToInt64() + 0x10), 100000000.0f);
+                                    }
+                                    else
+                                    {
+                                        var doublecheck = Memory.ZwReadFloat(processHandle, (IntPtr)timeToRunNextCharacterControllerDataCheckPTR.ToInt64() + 0x10);
+                                        if (doublecheck == 100000000.0f)
+                                        {
+                                            //DelayAction.Queue(() => writeCheatosz(processHandle, characterPtr), 5000.0f);
+                                            writeCheatos(processHandle, characterPtr, false);
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    //writeCheatos(processHandle, characterPtr, true);
+                                }
+                            }
                         }
                     }
-
                 }
                 else //else most likely the process is dead, clean up
                 {
                     Memory.CloseHandle(processHandle); //close the handle to avoid leaks
                     processHandle = IntPtr.Zero; //set it like this just in case for C# logic
                     gameProcessExists = false;
-                    characterPtr = IntPtr.Zero;
                     GameAssembly_dll = IntPtr.Zero;
+                    GameAssembly_dll_size = IntPtr.Zero;
+                    characterBasePtr = IntPtr.Zero;
+                    characterPtr = IntPtr.Zero;
+                    clientPtr = IntPtr.Zero;
                 }
             }
         }
