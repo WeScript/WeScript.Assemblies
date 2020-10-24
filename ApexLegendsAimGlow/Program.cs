@@ -92,9 +92,9 @@ namespace ApexLegends
                 public static readonly MenuKeyBind AimKeyTwo = new MenuKeyBind("aimkeytwo", "Aimbot HotKey2 (HOLD)", VirtualKeyCode.LeftMenu, KeybindType.Hold, false);
                 public static readonly MenuList AimType = new MenuList("aimtype", "Aimbot Type", new List<string>() { "Direct Engine ViewAngles", "Real Mouse Movement" }, 0);
                 //public static readonly MenuList AimSpot = new MenuList("aimspot", "Aimbot Spot", new List<string>() { "Aim at their Head", "Aim at their Body" }, 0);
-                public static readonly MenuKeyBind AimSpotToggle = new MenuKeyBind("aimspottoggle", "Aim Spot Toggle", VirtualKeyCode.F2, KeybindType.Toggle, true);
+                public static readonly MenuKeyBind AimSpotToggle = new MenuKeyBind("aimspottoggle", "Aim Spot Toggle", VirtualKeyCode.F2, KeybindType.Toggle, false);
                 //public static readonly MenuSlider AimSpeed = new MenuSlider("aimspeed", "Aimbot Speed %", 100, 1, 100);
-                public static readonly MenuKeyBind AimSpeedToggle = new MenuKeyBind("aimspeedtoggle", "AimSpeed Toggle", VirtualKeyCode.F3, KeybindType.Toggle, true);
+                public static readonly MenuKeyBind AimSpeedToggle = new MenuKeyBind("aimspeedtoggle", "AimSpeed Toggle", VirtualKeyCode.F3, KeybindType.Toggle, false);
                 public static readonly MenuBool DrawAimSpot = new MenuBool("drawaimspot", "Draw Aimbot Spot", true);
                 public static readonly MenuBool DrawAimTarget = new MenuBool("drawaimtarget", "Draw Aimbot Current Target", true);
                 public static readonly MenuColor AimTargetColor = new MenuColor("aimtargetcolor", "Target Color", new SharpDX.Color(0x1F, 0xBE, 0xD6, 255));
