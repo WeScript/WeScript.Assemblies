@@ -47,12 +47,12 @@ namespace ApexLegends
         public static uint MaxShield = 0x174; //int 
         public static uint Health = 0x420; //int 
         public static uint Team = 0x430; //int 
-        public static uint BoundingBox = 0x4B4; //vec3 
-        public static uint MaxHealth = 0x550; //int
+        public static uint BoundingBox = 0x4BC; //vec3 
+        public static uint MaxHealth = 0x558; //int
         public static uint BoneClass = 0xF18; //ptr 
 
         public static uint m_latestPrimaryWeapons = 0x1a0c; //int
-        public static uint BulletSpeed = 0x1e0c; //float 
+        public static uint BulletSpeed = 0x1e1c; //float 
 
         public static uint CameraPosition = 0x1e6c;
         public static uint CameraAngles = 0x1e6c + 0xC;
@@ -161,7 +161,7 @@ namespace ApexLegends
 
         static void Main(string[] args)
         {
-            Console.WriteLine("WeScript.app ApexLegends Experimental Aimbot+Glow+HWIDSpoofer!");
+            Console.WriteLine("WeScript.app ApexLegends Experimental Aimbot+Glow+HWIDSpoofer - S7!");
             Console.WriteLine("==== Use; [F2] toggle AimSpot, [F3] toggle AimSpeed, [F4] toggle Glow!");
             InitializeMenu();
             Renderer.OnRenderer += OnRenderer;
