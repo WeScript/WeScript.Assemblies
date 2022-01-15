@@ -206,18 +206,18 @@ namespace CSGOExample
 
         public static void SendChatMessageToTeam(IntPtr gameWindow)
         {
-            Input.PostMessageWS(gameWindow, WM_KEYDOWN, (int)VirtualKeyCode.U, (IntPtr)(Input.MapVirtualKeyWS((uint)VirtualKeyCode.U, 0) << 16)); //keydown U
-            Input.PostMessageWS(gameWindow, WM_KEYUP, (int)VirtualKeyCode.U, (IntPtr)(Input.MapVirtualKeyWS((uint)VirtualKeyCode.U, 0) << 16)); //keyup U
-            Input.SleepWS(100);
-            Input.SendString("I am using WWW.WESCRIPT.APP to carry my team!");
-            Input.SleepWS(50);
-            Input.KeyPress(VirtualKeyCode.Enter);
+            //Input.PostMessageWS(gameWindow, WM_KEYDOWN, (int)VirtualKeyCode.U, (IntPtr)(Input.MapVirtualKeyWS((uint)VirtualKeyCode.U, 0) << 16)); //keydown U
+            //Input.PostMessageWS(gameWindow, WM_KEYUP, (int)VirtualKeyCode.U, (IntPtr)(Input.MapVirtualKeyWS((uint)VirtualKeyCode.U, 0) << 16)); //keyup U
+            //Input.SleepWS(100);
+            //Input.SendString("I am using WWW.WESCRIPT.APP to carry my team!");
+            //Input.SleepWS(50);
+            //Input.KeyPress(VirtualKeyCode.Enter);
         }
 
 
         static void Main(string[] args)
         {
-            Console.WriteLine("WeScript.app CSGO Example Assembly Loaded! (last update [04.06.2020])");
+            Console.WriteLine("WeScript.app CSGO Example Assembly Loaded! (last update [15.01.2022])");
 
             InitializeMenu();
             Renderer.OnRenderer += OnRenderer;
@@ -229,7 +229,8 @@ namespace CSGOExample
         {
             if (processHandle == IntPtr.Zero) //if we still don't have a handle to the process
             {
-                var wndHnd = Memory.FindWindowName("Counter-Strike: Global Offensive"); //try finding the window of the process (check if it's spawned and loaded)
+                //var wndHnd = Memory.FindWindowName("Counter-Strike: Global Offensive"); //try finding the window of the process (check if it's spawned and loaded)
+                var wndHnd = Memory.FindWindowClassName("Valve001");
                 if (wndHnd != IntPtr.Zero) //if it exists
                 {
                     var calcPid = Memory.GetPIDFromHWND(wndHnd); //get the PID of that same process
@@ -246,7 +247,8 @@ namespace CSGOExample
             }
             else //else we have a handle, lets check if we should close it, or use it
             {
-                var wndHnd = Memory.FindWindowName("Counter-Strike: Global Offensive");
+                //var wndHnd = Memory.FindWindowName("Counter-Strike: Global Offensive");
+                var wndHnd = Memory.FindWindowClassName("Valve001");
                 if (wndHnd != IntPtr.Zero) //window still exists, so handle should be valid? let's keep using it
                 {
                     //the lines of code below execute every 33ms outside of the renderer thread, heavy code can be put here if it's not render dependant
@@ -272,14 +274,18 @@ namespace CSGOExample
                             if (dwViewMatrix_Offs == IntPtr.Zero) //if offset is zero... find it
                             {
                                 dwViewMatrix_Offs = Memory.FindSignature(processHandle, client_panorama, client_panorama_size, "0F 10 05 ? ? ? ? 8D 85 ? ? ? ? B9", 0x3);
+                                if (dwViewMatrix_Offs != IntPtr.Zero) Console.WriteLine($"dwViewMatrix_Offs: {dwViewMatrix_Offs.ToString("X")}");
                             }
                             if (dwEntityList_Offs == IntPtr.Zero)
                             {
                                 dwEntityList_Offs = Memory.FindSignature(processHandle, client_panorama, client_panorama_size, "BB ? ? ? ? 83 FF 01 0F 8C ? ? ? ? 3B F8", 0x1);
+                                if (dwEntityList_Offs != IntPtr.Zero) Console.WriteLine($"dwEntityList_Offs: {dwEntityList_Offs.ToString("X")}");
                             }
                             if (dwLocalPlayer_Offs == IntPtr.Zero)
                             {
-                                dwLocalPlayer_Offs = Memory.FindSignature(processHandle, client_panorama, client_panorama_size, "42 56 8D 34 85 ? ? ? ? 89", 0x5);
+                                //dwLocalPlayer_Offs = Memory.FindSignature(processHandle, client_panorama, client_panorama_size, "42 56 8D 34 85 ? ? ? ? 89", 0x5);
+                                dwLocalPlayer_Offs = Memory.FindSignature(processHandle, client_panorama, client_panorama_size, "8D 34 85 ? ? ? ? 89 15 ? ? ? ? 8B 41 08 8B 48 04 83 F9 FF", 0x3);
+                                if (dwLocalPlayer_Offs != IntPtr.Zero) Console.WriteLine($"dwLocalPlayer_Offs: {dwLocalPlayer_Offs.ToString("X")}");
                             }
                         }
                     }
@@ -297,11 +303,13 @@ namespace CSGOExample
                         {
                             if (dwSetViewAng_Addr == IntPtr.Zero)
                             {
-                                dwSetViewAng_Addr = Memory.FindSignature(processHandle, engine_dll, engine_dll_size, "F3 0F 11 80 ? ? ? ? D9 46 04 D9 05", -0x4);
+                                dwSetViewAng_Addr = Memory.FindSignature(processHandle, engine_dll, engine_dll_size, "8B 34 85 ? ? ? ? 8D 8E ? ? 00 00 8B C1 C1 E0 04 F3", 0x3);
+                                if (dwSetViewAng_Addr != IntPtr.Zero) Console.WriteLine($"dwSetViewAng_Addr: {dwSetViewAng_Addr.ToString("X")}");
                             }
                             if (dwSetViewAng_Offs == IntPtr.Zero)
                             {
-                                dwSetViewAng_Offs = Memory.FindSignature(processHandle, engine_dll, engine_dll_size, "F3 0F 11 80 ? ? ? ? D9 46 04 D9 05", 0x4);
+                                dwSetViewAng_Offs = Memory.FindSignature(processHandle, engine_dll, engine_dll_size, "8B 34 85 ? ? ? ? 8D 8E ? ? 00 00 8B C1 C1 E0 04 F3", 0x9);
+                                if (dwSetViewAng_Offs != IntPtr.Zero) Console.WriteLine($"dwSetViewAng_Offs: {dwSetViewAng_Offs.ToString("X")}");
                             }
                             if (Components.MiscComponent.SupportInChat.Enabled)
                             {
@@ -310,7 +318,7 @@ namespace CSGOExample
                                     if (shouldpostmsg)
                                     {
                                         shouldpostmsg = false;
-                                        //SendChatMessageToTeam(wndHnd);
+                                        SendChatMessageToTeam(wndHnd);
                                     }
                                 }
                             }
@@ -349,6 +357,7 @@ namespace CSGOExample
 
             if (dwViewMatrix_Offs != IntPtr.Zero)
             {
+                //Console.WriteLine("wehere");
                 var matrix = Memory.ReadMatrix(processHandle, (IntPtr)(dwViewMatrix_Offs.ToInt64() + 0xB0));
                 if (dwEntityList_Offs != IntPtr.Zero)
                 {
@@ -378,9 +387,9 @@ namespace CSGOExample
                             }
                             var myPos = Memory.ReadVector3(processHandle, (IntPtr)(LocalPlayer.ToInt64() + 0x138));
                             var myTeam = Memory.ReadByte(processHandle, (IntPtr)(LocalPlayer.ToInt64() + 0xF4));
-                            var myAngles = Memory.ReadVector3(processHandle, (IntPtr)(LocalPlayer.ToInt64() + 0x31D8)); //m_thirdPersonViewAngles
+                            var myAngles = Memory.ReadVector3(processHandle, (IntPtr)(LocalPlayer.ToInt64() + 0x31E8)); //m_thirdPersonViewAngles
                             var myEyePos = Memory.ReadVector3(processHandle, (IntPtr)(LocalPlayer.ToInt64() + 0x108)); //m_vecViewOffset
-                            var myPunchAngles = Memory.ReadVector3(processHandle, (IntPtr)(LocalPlayer.ToInt64() + 0x302C)); //m_aimPunchAngle 
+                            var myPunchAngles = Memory.ReadVector3(processHandle, (IntPtr)(LocalPlayer.ToInt64() + 0x303C)); //m_aimPunchAngle 
                             for (uint i = 0; i <= 64; i++)
                             {
                                 var entityAddr = Memory.ReadPointer(processHandle, (IntPtr)(dwEntityList_Offs.ToInt64() + i * 0x10), isWow64Process);
