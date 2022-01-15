@@ -124,7 +124,7 @@ namespace GTA5Example
 
         static void Main(string[] args)
         {
-            Console.WriteLine("WeScript.app GTA5 Example Assembly Loaded!");
+            Console.WriteLine("WeScript.app GTA5 Example Assembly Loaded! [Last update 15.01.2022]");
             InitializeMenu();
             Renderer.OnRenderer += OnRenderer;
             Memory.OnTick += OnTick;
@@ -176,18 +176,18 @@ namespace GTA5Example
                         {
                             if (dwViewMatrix_Offs == IntPtr.Zero)
                             {
-                                dwViewMatrix_Offs = Memory.FindSignature(processHandle, GameBase, GameSize, "48 8B 15 ? ? ? ? 48 8D 2D ? ? ? ? 48 8B CD", 0x3); 
-                                //Console.WriteLine($"dwViewMatrix_Offs: {dwViewMatrix_Offs.ToString("X")}");
+                                dwViewMatrix_Offs = Memory.FindSignature(processHandle, GameBase, GameSize, "48 8B 15 ? ? ? ? 48 8D 2D ? ? ? ? 48 8B CD", 0x3);
+                                Console.WriteLine($"dwViewMatrix_Offs: {dwViewMatrix_Offs.ToString("X")}");
                             }
                             if (dwReplayInterface_Offs == IntPtr.Zero)
                             {
-                                dwReplayInterface_Offs = Memory.FindSignature(processHandle, GameBase, GameSize, "48 8B 05 ? ? ? ? 41 8B 1E", 0xF1); 
-                                //Console.WriteLine($"dwReplayInterface_Offs: {dwReplayInterface_Offs.ToString("X")}");
+                                dwReplayInterface_Offs = Memory.FindSignature(processHandle, GameBase, GameSize, "48 8B 05 ? ? ? ? 41 8B 1E", 0xF0);
+                                Console.WriteLine($"dwReplayInterface_Offs: {dwReplayInterface_Offs.ToString("X")}");
                             }
                             if (dwWorld_Offs == IntPtr.Zero)
                             {
                                 dwWorld_Offs = Memory.FindSignature(processHandle, GameBase, GameSize, "48 8B 05 ? ? ? ? 45 ? ? ? ? 48 8B 48 08 48 85 C9 74 07", 0x3);
-                                //Console.WriteLine($"dwWorld_Offs: {dwWorld_Offs.ToString("X")}");
+                                Console.WriteLine($"dwWorld_Offs: {dwWorld_Offs.ToString("X")}");
                             }
                         }
                     }
@@ -252,7 +252,7 @@ namespace GTA5Example
                                             var entity_head = new Vector3(entityPos.X, entityPos.Y, entityPos.Z + 0.8f);
                                             var entityHP = Memory.ReadFloat(processHandle, (IntPtr)ped.ToInt64() + 0x280);
                                             var entityMaxHP = Memory.ReadFloat(processHandle, (IntPtr)ped.ToInt64() + 0x2A0);
-                                            var ped_type = Memory.ReadUInt32(processHandle, (IntPtr)ped.ToInt64() + 0x10A8);
+                                            var ped_type = Memory.ReadUInt32(processHandle, (IntPtr)ped.ToInt64() + 0x10B8); //c1 e2 0b c1 fa 19 e9 //sig to find it manually
                                             if (ped_type > 0)
                                             {
                                                 ped_type = (ped_type << 11 >> 25);
@@ -300,7 +300,7 @@ namespace GTA5Example
                                                 }
                                             }
                                         }
-                                    } 
+                                    }
                                 }
                             }
                         }
